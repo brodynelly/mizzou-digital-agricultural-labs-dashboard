@@ -219,9 +219,9 @@ router.post('/restore', authenticateJWT, isAdmin, async (req, res) => {
 
     // Check if backup file exists
     const backupDir = path.join(__dirname, '..', 'backups');
-    const backupPath = path.join(backupDir, filename);
+    const backupPath = path.resolve(backupDir, filename);
 
-    if (!fs.existsSync(backupPath)) {
+    if (!backupPath.startsWith(backupDir) || !fs.existsSync(backupPath)) {
       return res.status(404).json({ error: 'Backup file not found' });
     }
 
