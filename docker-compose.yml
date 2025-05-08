@@ -31,12 +31,12 @@ services:
     entrypoint: [ "/bin/bash", "/setup.sh" ]
     volumes:
       - ./database/setup.sh:/setup.sh:ro
-      - .env:/env/.env:ro #mounting .env so we can hide login info from script
+      - .env:/env/.env:ro
     networks:
       - app-net
 
   seed-admin:
-    image: server:1.0.0
+    image: brodynelly/paal-backend:1.0.0
     container_name: seed-admin
     depends_on:
       - mongo
@@ -51,11 +51,11 @@ services:
       - ./:/usr/server
 
   backend:
-    image: server:1.0.0
     build:
       context: .
       dockerfile: Dockerfile.backend
       target: dev
+    image: brodynelly/paal-backend:1.0.0
     container_name: ${SERVER_HOST}
     depends_on:
       - mongo
@@ -74,6 +74,7 @@ services:
       dockerfile: Dockerfile.dev
       target: dev
     container_name: frontend
+    image: brodynelly/paal-frontend:1.0.0 # <<< ADDED: Your Docker Hub image name and tag
     depends_on:
       - backend
     networks:
