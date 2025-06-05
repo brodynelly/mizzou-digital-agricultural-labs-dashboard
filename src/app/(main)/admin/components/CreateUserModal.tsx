@@ -57,7 +57,6 @@ export function CreateUserModal({
           role: value,
           permissions: template.permissions
         }));
-
       } else {
         setFormData((prev) => ({ ...prev, [name]: value }));
       }

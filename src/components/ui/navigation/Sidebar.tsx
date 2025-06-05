@@ -26,11 +26,11 @@ import { UserProfile } from "./UserProfile"
 
 // Define a type for navigation items to ensure consistency
 type NavigationItem = {
-  name: string;
-  href: string;
-  icon: React.ComponentType<any>;
-  notifications?: boolean;
-  adminOnly?: boolean;
+  name: string
+  href: string
+  icon: React.ComponentType<any>
+  notifications?: boolean
+  adminOnly?: boolean
 }
 
 const navigation: NavigationItem[] = [
@@ -58,9 +58,9 @@ const navigation: NavigationItem[] = [
 // Define a type for navigation items with children
 type NavigationItemWithChildren = NavigationItem & {
   children?: Array<{
-    name: string;
-    href: string;
-  }>;
+    name: string
+    href: string
+  }>
 }
 
 const navigation2: NavigationItemWithChildren[] = [
@@ -111,10 +111,13 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     navigation2[1]?.name,
   ])
 
-  const isActive = React.useCallback((itemHref: string): boolean => {
-    if (!mounted || !itemHref) return false
-    return pathname === itemHref || pathname.startsWith(`${itemHref}/`)
-  }, [pathname, mounted])
+  const isActive = React.useCallback(
+    (itemHref: string): boolean => {
+      if (!mounted || !itemHref) return false
+      return pathname === itemHref || pathname.startsWith(`${itemHref}/`)
+    },
+    [pathname, mounted],
+  )
 
   const toggleMenu = React.useCallback((name: string) => {
     setOpenMenus((prev) => {
@@ -127,10 +130,10 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
   // Filter navigation items based on user role and search term
   const filteredNavigation = React.useMemo(() => {
-    return navigation.filter(item => {
+    return navigation.filter((item) => {
       // First filter by admin role
-      if ('adminOnly' in item && item.adminOnly) {
-        if (user?.role !== 'admin') {
+      if ("adminOnly" in item && item.adminOnly) {
+        if (user?.role !== "admin") {
           return false
         }
       }
@@ -148,9 +151,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
   // Filter system navigation items by search term
   const filteredNavigation2 = React.useMemo(() => {
     // First apply admin filter
-    const adminFiltered = navigation2.filter(item => {
-      if ('adminOnly' in item && item.adminOnly) {
-        return user?.role === 'admin'
+    const adminFiltered = navigation2.filter((item) => {
+      if ("adminOnly" in item && item.adminOnly) {
+        return user?.role === "admin"
       }
       return true
     })
@@ -161,7 +164,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     const term = searchTerm.toLowerCase()
-    return adminFiltered.filter(item => {
+    return adminFiltered.filter((item) => {
       // Check if the main item name matches
       if (item.name.toLowerCase().includes(term)) {
         return true
@@ -169,8 +172,8 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
 
       // Check if any child item names match
       if (item.children) {
-        return item.children.some(child =>
-          child.name.toLowerCase().includes(term)
+        return item.children.some((child) =>
+          child.name.toLowerCase().includes(term),
         )
       }
 
@@ -185,13 +188,11 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
     }
 
     const term = searchTerm.toLowerCase()
-    return navigation3.filter(item =>
-      item.name.toLowerCase().includes(term)
-    )
+    return navigation3.filter((item) => item.name.toLowerCase().includes(term))
   }, [searchTerm])
 
   return (
-    <Sidebar {...props} className="bg-gray-50 dark:bg-gray-925 justify-center">
+    <Sidebar {...props} className="dark:bg-gray-925 justify-center bg-gray-50">
       <SidebarHeader className="px-3 py-4">
         <div className="flex items-center gap-3">
           <span className="flex size-9 items-center justify-center rounded-md bg-white p-1.5 shadow-sm ring-1 ring-gray-200 dark:bg-gray-900 dark:ring-gray-800">
@@ -264,7 +265,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ))
               ) : searchTerm.trim() !== "" ? (
                 <div className="px-3 py-2 text-sm text-gray-500">
-                  No results found for "{searchTerm}"
+                  No results found for &quot;{searchTerm}&quot;
                 </div>
               ) : null}
             </SidebarMenu>
@@ -286,9 +287,9 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                       onClick={
                         item.children
                           ? (e) => {
-                            e.preventDefault()
-                            toggleMenu(item.name)
-                          }
+                              e.preventDefault()
+                              toggleMenu(item.name)
+                            }
                           : undefined
                       }
                       suffix={
@@ -314,9 +315,12 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                         )}
                       >
                         {item.children
-                          .filter(child =>
-                            searchTerm.trim() === "" ||
-                            child.name.toLowerCase().includes(searchTerm.toLowerCase())
+                          .filter(
+                            (child) =>
+                              searchTerm.trim() === "" ||
+                              child.name
+                                .toLowerCase()
+                                .includes(searchTerm.toLowerCase()),
                           )
                           .map((child) => (
                             <SidebarMenuItem key={child.name}>
@@ -334,7 +338,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ))
               ) : searchTerm.trim() !== "" ? (
                 <div className="px-3 py-2 text-sm text-gray-500">
-                  No system items found for "{searchTerm}"
+                  No system items found for &quot;{searchTerm}&quot;
                 </div>
               ) : null}
             </SidebarMenu>
@@ -361,7 +365,7 @@ export function AppSidebar({ ...props }: React.ComponentProps<typeof Sidebar>) {
                 ))
               ) : searchTerm.trim() !== "" ? (
                 <div className="px-3 py-2 text-sm text-gray-500">
-                  No shortcuts found for "{searchTerm}"
+                  No shortcuts found for &quot;{searchTerm}&quot;
                 </div>
               ) : null}
             </SidebarMenu>

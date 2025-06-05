@@ -1,30 +1,30 @@
-"use client";
+"use client"
 
-import { Button } from "@/components/Button_S";
-import { BasicModal } from "./BasicModal";
-import { Input } from "@/components/Input";
-import { Label } from "@/components/Label";
-import { Textarea } from "@/components/Textarea";
-import { Switch } from "@/components/Switch";
-import { useState, useEffect } from "react";
+import { Button } from "@/components/Button_S"
+import { Input } from "@/components/Input"
+import { Label } from "@/components/Label"
+import { Switch } from "@/components/Switch"
+import { Textarea } from "@/components/Textarea"
+import { useEffect, useState } from "react"
+import { BasicModal } from "./BasicModal"
 
 type FarmType = {
-  _id: string;
-  name: string;
-  location: string;
-  description?: string;
-  isActive?: boolean;
-  createdAt: string;
-  updatedAt: string;
-};
+  _id: string
+  name: string
+  location: string
+  description?: string
+  isActive?: boolean
+  createdAt: string
+  updatedAt: string
+}
 
 type BasicFarmModalProps = {
-  isOpen: boolean;
-  onClose: () => void;
-  onSubmit?: (farmData: any) => void;
-  farm?: FarmType | null;
-  mode: "view" | "edit" | "create";
-};
+  isOpen: boolean
+  onClose: () => void
+  onSubmit?: (farmData: any) => void
+  farm?: FarmType | null
+  mode: "view" | "edit" | "create"
+}
 
 export function BasicFarmModal({
   isOpen,
@@ -38,7 +38,7 @@ export function BasicFarmModal({
     location: "",
     description: "",
     isActive: true,
-  });
+  })
 
   // Initialize form data when farm changes
   useEffect(() => {
@@ -49,150 +49,158 @@ export function BasicFarmModal({
         location: farm.location || "",
         description: farm.description || "",
         isActive: farm.isActive !== false, // Default to true if undefined
-      });
+      })
     } else {
       setFormData({
         name: "",
         location: "",
         description: "",
         isActive: true,
-      });
+      })
     }
-  }, [farm]);
+  }, [farm])
 
   const handleChange = (
-    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>
+    e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>,
   ) => {
-    const { name, value } = e.target;
-    setFormData((prev: any) => ({ ...prev, [name]: value }));
-  };
+    const { name, value } = e.target
+    setFormData((prev: any) => ({ ...prev, [name]: value }))
+  }
 
   const handleSwitchChange = (checked: boolean) => {
-    setFormData((prev: any) => ({ ...prev, isActive: checked }));
-  };
+    setFormData((prev: any) => ({ ...prev, isActive: checked }))
+  }
 
   const handleSubmit = () => {
     if (mode === "view" || !onSubmit) {
-      onClose();
-      return;
+      onClose()
+      return
     }
-    
-    onSubmit(formData);
-  };
+
+    onSubmit(formData)
+  }
 
   const getModalTitle = () => {
     switch (mode) {
       case "create":
-        return "Add New Farm";
+        return "Add New Farm"
       case "edit":
-        return "Edit Farm";
+        return "Edit Farm"
       case "view":
-        return "Farm Details";
+        return "Farm Details"
       default:
-        return "Farm";
+        return "Farm"
     }
-  };
+  }
 
   return (
-    <BasicModal
-      isOpen={isOpen}
-      onClose={onClose}
-      title={getModalTitle()}
-    >
+    <BasicModal isOpen={isOpen} onClose={onClose} title={getModalTitle()}>
       {mode === "view" ? (
         <div className="space-y-4">
           <div>
-            <Label className="block mb-1">Farm Name</Label>
-            <p className="p-2 border rounded bg-gray-50 dark:bg-gray-900">{farm?.name || "N/A"}</p>
+            <Label className="mb-1 block">Farm Name</Label>
+            <p className="rounded border bg-gray-50 p-2 dark:bg-gray-900">
+              {farm?.name || "N/A"}
+            </p>
           </div>
-          
+
           <div>
-            <Label className="block mb-1">Location</Label>
-            <p className="p-2 border rounded bg-gray-50 dark:bg-gray-900">{farm?.location || "N/A"}</p>
+            <Label className="mb-1 block">Location</Label>
+            <p className="rounded border bg-gray-50 p-2 dark:bg-gray-900">
+              {farm?.location || "N/A"}
+            </p>
           </div>
-          
+
           <div>
-            <Label className="block mb-1">Description</Label>
-            <p className="p-2 border rounded bg-gray-50 dark:bg-gray-900 min-h-[60px]">{farm?.description || "N/A"}</p>
+            <Label className="mb-1 block">Description</Label>
+            <p className="min-h-[60px] rounded border bg-gray-50 p-2 dark:bg-gray-900">
+              {farm?.description || "N/A"}
+            </p>
           </div>
-          
+
           <div>
-            <Label className="block mb-1">Status</Label>
-            <p className="p-2 border rounded bg-gray-50 dark:bg-gray-900">
+            <Label className="mb-1 block">Status</Label>
+            <p className="rounded border bg-gray-50 p-2 dark:bg-gray-900">
               {farm?.isActive !== false ? "Active" : "Inactive"}
             </p>
           </div>
-          
+
           <div>
-            <Label className="block mb-1">Created At</Label>
-            <p className="p-2 border rounded bg-gray-50 dark:bg-gray-900">
-              {farm?.createdAt ? new Date(farm.createdAt).toLocaleString() : "N/A"}
+            <Label className="mb-1 block">Created At</Label>
+            <p className="rounded border bg-gray-50 p-2 dark:bg-gray-900">
+              {farm?.createdAt
+                ? new Date(farm.createdAt).toLocaleString()
+                : "N/A"}
             </p>
           </div>
-          
+
           <div>
-            <Label className="block mb-1">Last Updated</Label>
-            <p className="p-2 border rounded bg-gray-50 dark:bg-gray-900">
-              {farm?.updatedAt ? new Date(farm.updatedAt).toLocaleString() : "N/A"}
+            <Label className="mb-1 block">Last Updated</Label>
+            <p className="rounded border bg-gray-50 p-2 dark:bg-gray-900">
+              {farm?.updatedAt
+                ? new Date(farm.updatedAt).toLocaleString()
+                : "N/A"}
             </p>
           </div>
         </div>
       ) : (
         <div className="space-y-4">
           <div>
-            <Label htmlFor="name" className="block mb-1">Farm Name</Label>
+            <Label htmlFor="name" className="mb-1 block">
+              Farm Name
+            </Label>
             <Input
               id="name"
               name="name"
               value={formData.name}
               onChange={handleChange}
-              disabled={mode === "view"}
+              disabled={mode === "edit" || mode === "create" ? false : true}
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="location" className="block mb-1">Location</Label>
+            <Label htmlFor="location" className="mb-1 block">
+              Location
+            </Label>
             <Input
               id="location"
               name="location"
               value={formData.location}
               onChange={handleChange}
-              disabled={mode === "view"}
+              disabled={mode === "edit" || mode === "create" ? false : true}
             />
           </div>
-          
+
           <div>
-            <Label htmlFor="description" className="block mb-1">Description</Label>
+            <Label htmlFor="description" className="mb-1 block">
+              Description
+            </Label>
             <Textarea
               id="description"
               name="description"
               value={formData.description}
               onChange={handleChange}
-              disabled={mode === "view"}
+              disabled={mode === "edit" || mode === "create" ? false : true}
               rows={3}
             />
           </div>
-          
+
           <div className="flex items-center space-x-2">
             <Switch
               checked={formData.isActive}
               onCheckedChange={handleSwitchChange}
-              disabled={mode === "view"}
+              disabled={false}
               id="isActive"
             />
             <Label htmlFor="isActive">Active</Label>
           </div>
-          
-          {mode !== "view" && (
+
+          {(mode === "edit" || mode === "create") && (
             <div className="flex justify-end space-x-2 pt-4">
-              <Button
-                type="button"
-                variant="outline"
-                onClick={onClose}
-              >
+              <Button type="button" variant="secondary" onClick={onClose}>
                 Cancel
               </Button>
-              
+
               <Button type="button" onClick={handleSubmit}>
                 {mode === "create" ? "Create Farm" : "Save Changes"}
               </Button>
@@ -201,5 +209,5 @@ export function BasicFarmModal({
         </div>
       )}
     </BasicModal>
-  );
+  )
 }
