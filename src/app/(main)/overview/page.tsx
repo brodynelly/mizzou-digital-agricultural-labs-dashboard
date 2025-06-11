@@ -180,7 +180,7 @@ export default function Overview() {
       </section>
 
       {/* Set the Visibility only if the Graph has Data */}
-      {!(chartData.length > 0) && (
+      {!chartData && (
         <section aria-labelledby="monitoring-overview">
           <h1
             id="monitoring-overview"

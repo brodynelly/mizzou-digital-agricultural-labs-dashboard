@@ -14,7 +14,7 @@ export default function Example() {
   useEffect(() => {
     const fetchInitialData = async () => {
       try {
-        const response = await fetch('/api/pigs')
+        const response = await fetch("/api/pigs")
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
@@ -22,8 +22,8 @@ export default function Example() {
         setPigData(data)
         setIsLoading(false)
       } catch (error) {
-        console.error('Error fetching pig data:', error)
-        setError('Failed to fetch pig data. Please try again later.')
+        console.error("Error fetching pig data:", error)
+        setError("Failed to fetch pig data. Please try again later.")
         setIsLoading(false)
       }
     }
@@ -47,11 +47,12 @@ export default function Example() {
     return (
       <div className="flex items-center justify-center p-8">
         <div className="h-8 w-8 animate-spin rounded-full border-4 border-indigo-600 border-t-transparent"></div>
-      </div>)
+      </div>
+    )
   }
 
   if (error) {
-    console.error(error); // Log Error into the consol, nothing else
+    console.error(error) // Log Error into the consol, nothing else
   }
 
   return (
