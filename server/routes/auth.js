@@ -19,11 +19,7 @@ const loginLimiter = rateLimit({
 // Register a new user (admin only)
 router.post('/register', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    // Check if requester is admin
-    if (req.user.role !== 'admin') {
-      return res.status(403).json({ error: 'Only admins can register new users' });
-    }
-
+    // Authorization handled by isAdmin middleware
     const {
       email,
       password,
