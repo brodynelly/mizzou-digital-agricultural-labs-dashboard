@@ -71,32 +71,22 @@ router.post('/register', authenticateJWT, isAdmin, async (req, res) => {
   }
 });
 
-// Test endpoint
-router.get('/test', (req, res) => {
-  console.log('Test endpoint called');
-  res.json({ message: 'Auth API is working!' });
-});
 
 // Login
 router.post('/login', loginLimiter, async (req, res) => {
   try {
-    console.log('Login request received:', req.body);
     const { email, password } = req.body;
 
     // Validate input
     if (!email || !password) {
-      console.log('Missing email or password');
       return res.status(400).json({ error: 'Email and password are required' });
     }
 
     // Find user
-    console.log('Looking for user with email:', email.toLowerCase());
     const user = await User.findOne({ email: email.toLowerCase() });
     if (!user) {
-      console.log('User not found');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    console.log('User found:', user.email);
 
     // Check if user is active
     if (!user.isActive) {
@@ -104,21 +94,15 @@ router.post('/login', loginLimiter, async (req, res) => {
     }
 
     // Check password
-    console.log('Checking password...');
-
     // For test users, always use direct comparison
     // This is a temporary solution for development
-    console.log('Using direct password comparison for test users');
     const isMatch = password === user.password;
-    console.log('Direct comparison result:', isMatch, 'Expected:', user.password, 'Actual:', password);
 
     // In production, you would use a secure password comparison method like bcrypt
 
     if (!isMatch) {
-      console.log('Password does not match');
       return res.status(401).json({ error: 'Invalid credentials' });
     }
-    console.log('Password matches');
 
     // Update last login
     try {
@@ -131,7 +115,6 @@ router.post('/login', loginLimiter, async (req, res) => {
     }
 
     // Generate JWT token
-    console.log('Generating JWT token with secret:', process.env.JWT_SECRET ? 'Secret exists' : 'No secret found');
     const token = jwt.sign(
       {
         id: user._id,
@@ -141,7 +124,6 @@ router.post('/login', loginLimiter, async (req, res) => {
       process.env.JWT_SECRET || 'fallback_secret',
       { expiresIn: '1d' }
     );
-    console.log('Token generated successfully');
 
     // Log the login activity
     const { logActivity } = require('../services/activityLogger');
@@ -177,7 +159,6 @@ router.post('/login', loginLimiter, async (req, res) => {
       user: userResponse
     };
 
-    console.log('Sending response:', JSON.stringify(responseData, null, 2));
     res.json(responseData);
   } catch (error) {
     console.error('Login error:', error);
