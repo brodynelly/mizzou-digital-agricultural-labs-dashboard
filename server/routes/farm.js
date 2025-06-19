@@ -259,13 +259,31 @@ router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
 router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { cascade } = req.query; // Add ?cascade=true to delete associated data
-    
+
     const farm = await Farm.findById(req.params.id);
     if (!farm) {
       return res.status(404).json({ error: 'Farm not found' });
     }
-    
-    // If cascade is true, delete all associated data
+
+    // Count related documents to check for orphans
+    const [barns, stalls, pigs, devices] = await Promise.all([
+      Barn.countDocuments({ farmId: farm._id }),
+      Stall.countDocuments({ farmId: farm._id }),
+      Pig.countDocuments({ 'currentLocation.farmId': farm._id }),
+      Device.countDocuments({ farmId: farm._id })
+    ]);
+
+    const hasRelations = barns + stalls + pigs + devices > 0;
+
+    // If there are related docs and cascade flag is not true, refuse deletion
+    if (hasRelations && cascade !== 'true') {
+      return res.status(400).json({
+        error:
+          'Farm has related barns, stalls, pigs or devices. Use ?cascade=true to delete them as well.'
+      });
+    }
+
+    // Cascade deletion when requested
     if (cascade === 'true') {
       await Promise.all([
         Barn.deleteMany({ farmId: farm._id }),
@@ -274,9 +292,9 @@ router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
         Device.deleteMany({ farmId: farm._id })
       ]);
     }
-    
+
     await Farm.findByIdAndDelete(req.params.id);
-    
+
     res.json({ message: 'Farm deleted successfully' });
   } catch (error) {
     console.error('Error deleting farm:', error);
