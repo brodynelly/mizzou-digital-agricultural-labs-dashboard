@@ -20,20 +20,20 @@ export const users = [
     name: "Emma Stone",
     email: "emma.stone@acme.com",
     initials: "ES",
-    role: "admin"
+    role: "admin",
   },
   {
     name: "John Smith",
-    email: "john.smith@acme.com", 
+    email: "john.smith@acme.com",
     initials: "JS",
-    role: "member"
+    role: "member",
   },
   {
     name: "Sarah Wilson",
     email: "sarah.wilson@acme.com",
-    initials: "SW", 
-    role: "viewer"
-  }
+    initials: "SW",
+    role: "viewer",
+  },
 ]
 
 export const invitedUsers = [
@@ -41,17 +41,21 @@ export const invitedUsers = [
     email: "invited.user1@acme.com",
     initials: "IU",
     role: "member",
-    expires: 7
+    expires: 7,
   },
   {
-    email: "invited.user2@acme.com", 
+    email: "invited.user2@acme.com",
     initials: "IU",
     role: "viewer",
-    expires: 5
-  }
+    expires: 5,
+  },
 ]
 
-export const healthStatuses: { value: string; label: string; variant: string }[] = [
+export const healthStatuses: {
+  value: string
+  label: string
+  variant: string
+}[] = [
   {
     value: "healthy",
     label: "Healthy",
@@ -134,32 +138,34 @@ export const pigData: Usage[] = Array.from({ length: 100 }, (_, i) => {
     "Hampshire",
     "Berkshire",
     "Pietrain",
-    "Meishan"
+    "Meishan",
   ]
   const breed = breeds[Math.floor(Math.random() * breeds.length)]
-  
+
   // Age between 1-5 years (12-60 months)
   const age = Math.floor(Math.random() * 48) + 12
-  
+
   // Assign to one of 4 groups
   const group = `Group ${Math.floor(Math.random() * 4) + 1}`
-  
+
   // Generate last edited timestamp within the last week
-  const lastEdited = new Date(Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000))
-  
+  const lastEdited = new Date(
+    Date.now() - Math.floor(Math.random() * 7 * 24 * 60 * 60 * 1000),
+  )
+
   return {
-    owner: `PIG-${(i + 1).toString().padStart(3, '0')}`,
+    owner: `PIG-${(i + 1).toString().padStart(3, "0")}`,
     status,
     costs: age,
     region: group,
     stability: healthRisk,
-    lastEdited: lastEdited.toLocaleDateString('en-GB', {
-      day: '2-digit',
-      month: '2-digit',
-      year: 'numeric',
-      hour: '2-digit',
-      minute: '2-digit'
+    lastEdited: lastEdited.toLocaleDateString("en-GB", {
+      day: "2-digit",
+      month: "2-digit",
+      year: "numeric",
+      hour: "2-digit",
+      minute: "2-digit",
     }),
-    breed
+    breed,
   }
 })

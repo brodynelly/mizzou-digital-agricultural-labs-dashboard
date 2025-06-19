@@ -4,11 +4,26 @@ import { Badge } from "@/components/Badge"
 import { Button } from "@/components/Button"
 import { Card } from "@/components/Card"
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/Tabs"
-import { CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import {
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card"
 import api from "@/lib/axios"
-import { Activity, ArrowLeft, Calendar, Clock, Heart, Info, Scale, Thermometer } from "lucide-react"
+import {
+  Activity,
+  ArrowLeft,
+  Calendar,
+  Clock,
+  Heart,
+  Info,
+  Scale,
+  Thermometer,
+} from "lucide-react"
 import { useParams, useRouter } from "next/navigation"
-import { useEffect, useState } from "react"
+import { useCallback, useEffect, useState } from "react"
 import { AddHealthRecordDrawer } from "./_components/AddHealthRecordDrawer"
 import { EditPigDrawer } from "./_components/EditPigDrawer"
 import { HealthMetricCard } from "./_components/HealthMetricCard"
@@ -17,35 +32,35 @@ import { LineChart } from "./_components/LineChartReal"
 import { TransactionChart } from "./_components/TransactionChartSimple"
 
 interface PigData {
-  _id: string;  // The MongoDB ObjectId as a string
-  pigId: number; // Numeric pig ID
-  tag: string;
-  breed: string;
-  age: number;
-  lastUpdate: string;  // ISO 8601 formatted date-time string
-  active: boolean;
+  _id: string // The MongoDB ObjectId as a string
+  pigId: number // Numeric pig ID
+  tag: string
+  breed: string
+  age: number
+  lastUpdate: string // ISO 8601 formatted date-time string
+  active: boolean
   currentLocation?: {
-    farmId?: string;
-    barnId?: string;
-    stallId?: string;
-  };
-  __v: number; // Version key, can be omitted in some cases
+    farmId?: string
+    barnId?: string
+    stallId?: string
+  }
+  __v: number // Version key, can be omitted in some cases
 }
 
 interface BCSData {
-  _id: string;  // The MongoDB ObjectId as a string
-  pigId: number;  // Numeric pig ID
-  timestamp: string;  // ISO 8601 formatted date-time string
-  score: number;  // BCS score value
-  __v: number; // Version key, can be omitted in some cases
+  _id: string // The MongoDB ObjectId as a string
+  pigId: number // Numeric pig ID
+  timestamp: string // ISO 8601 formatted date-time string
+  score: number // BCS score value
+  __v: number // Version key, can be omitted in some cases
 }
 
 interface PostureData {
-  _id: string;  // The MongoDB ObjectId as a string
-  pigId: number;  // Numeric pig ID
-  timestamp: string;  // ISO 8601 formatted date-time string
-  score: number;  // Posture score
-  __v: number; // Version key, can be omitted in some cases
+  _id: string // The MongoDB ObjectId as a string
+  pigId: number // Numeric pig ID
+  timestamp: string // ISO 8601 formatted date-time string
+  score: number // Posture score
+  __v: number // Version key, can be omitted in some cases
 }
 
 export default function PigDashboard() {
@@ -65,12 +80,12 @@ export default function PigDashboard() {
   const [addHealthRecordOpen, setAddHealthRecordOpen] = useState(false)
 
   // State for location names
-  const [farmName, setFarmName] = useState<string>('Not assigned')
-  const [barnName, setBarnName] = useState<string>('Not assigned')
-  const [stallName, setStallName] = useState<string>('No stall')
+  const [farmName, setFarmName] = useState<string>("Not assigned")
+  const [barnName, setBarnName] = useState<string>("Not assigned")
+  const [stallName, setStallName] = useState<string>("No stall")
 
   // Function to fetch pig data
-  const fetchPigData = async () => {
+  const fetchPigData = useCallback(async () => {
     try {
       setIsLoading(true)
 
@@ -85,48 +100,58 @@ export default function PigDashboard() {
         // Fetch BCS and posture data
         const [bcsResponse, postureResponse] = await Promise.all([
           api.get(`/pigs/${numericPigId}/bcs`),
-          api.get(`/pigs/${numericPigId}/posture/aggregated`)
+          api.get(`/pigs/${numericPigId}/posture/aggregated`),
         ])
 
         setBcsHistory(bcsResponse.data)
         setPostureHistory(postureResponse.data)
       } catch (dataError) {
-        console.error('Error fetching BCS or posture data:', dataError)
+        console.error("Error fetching BCS or posture data:", dataError)
         // Continue execution even if these fail
       }
 
       // Fetch health history separately with better error handling
       try {
         // Try with numeric ID first
-        const healthHistoryResponse = await api.get(`/pigs/${numericPigId}/health-status`)
+        const healthHistoryResponse = await api.get(
+          `/pigs/${numericPigId}/health-status`,
+        )
         setHealthHistory(healthHistoryResponse.data || [])
       } catch (healthError) {
-        console.error('Error fetching health status data with numeric ID:', healthError)
+        console.error(
+          "Error fetching health status data with numeric ID:",
+          healthError,
+        )
 
         try {
           // If that fails, try with the original ID parameter
-          const healthHistoryResponse = await api.get(`/pigs/${params.id}/health-status`)
+          const healthHistoryResponse = await api.get(
+            `/pigs/${params.id}/health-status`,
+          )
           setHealthHistory(healthHistoryResponse.data || [])
         } catch (fallbackError) {
-          console.error('Error fetching health status data with original ID:', fallbackError)
+          console.error(
+            "Error fetching health status data with original ID:",
+            fallbackError,
+          )
           // Set empty array if both attempts fail
           setHealthHistory([])
         }
       }
     } catch (error) {
-      console.error('Error fetching pig data:', error)
-      setError('Failed to fetch pig data')
+      console.error("Error fetching pig data:", error)
+      setError("Failed to fetch pig data")
     } finally {
       setIsLoading(false)
     }
-  }
+  }, [params.id])
 
   // Function to handle printing report
   const handlePrintReport = () => {
     // Create a new window for printing
-    const printWindow = window.open('', '_blank')
+    const printWindow = window.open("", "_blank")
     if (!printWindow) {
-      alert('Please allow pop-ups to print the report')
+      alert("Please allow pop-ups to print the report")
       return
     }
 
@@ -178,11 +203,11 @@ export default function PigDashboard() {
             </div>
             <div class="info-item">
               <div class="label">Status</div>
-              <div class="value">${pig?.active ? 'Active' : 'Inactive'}</div>
+              <div class="value">${pig?.active ? "Active" : "Inactive"}</div>
             </div>
             <div class="info-item">
               <div class="label">Added Date</div>
-              <div class="value">${new Date(pig?.lastUpdate || '').toLocaleDateString()}</div>
+              <div class="value">${new Date(pig?.lastUpdate || "").toLocaleDateString()}</div>
             </div>
           </div>
         </div>
@@ -237,7 +262,7 @@ export default function PigDashboard() {
     if (params.id) {
       fetchPigData()
     }
-  }, [params.id]) // fetchPigData is defined inside the component, so it's stable
+  }, [fetchPigData, params.id]) // fetchPigData is defined inside the component, so it's stable
 
   // Fetch location names when pig data changes
   useEffect(() => {
@@ -249,7 +274,9 @@ export default function PigDashboard() {
         if (pig?.currentLocation?.stallId) {
           console.log("Fetching stall with ID:", pig.currentLocation.stallId)
           try {
-            const stallResponse = await api.get(`/stalls/${pig.currentLocation.stallId}`)
+            const stallResponse = await api.get(
+              `/stalls/${pig.currentLocation.stallId}`,
+            )
             console.log("Stall response:", stallResponse.data)
 
             // Set stall name
@@ -261,9 +288,11 @@ export default function PigDashboard() {
             // Get barn data from stall
             if (stallResponse.data && stallResponse.data.barnId) {
               // If barnId is an object with _id property
-              const barnId = typeof stallResponse.data.barnId === 'object' && stallResponse.data.barnId?._id
-                ? stallResponse.data.barnId._id
-                : stallResponse.data.barnId;
+              const barnId =
+                typeof stallResponse.data.barnId === "object" &&
+                stallResponse.data.barnId?._id
+                  ? stallResponse.data.barnId._id
+                  : stallResponse.data.barnId
 
               console.log("Fetching barn with ID from stall:", barnId)
               try {
@@ -278,9 +307,14 @@ export default function PigDashboard() {
 
                 // Get farm data from barn
                 if (barnResponse.data && barnResponse.data.farmId) {
-                  console.log("Fetching farm with ID from barn:", barnResponse.data.farmId)
+                  console.log(
+                    "Fetching farm with ID from barn:",
+                    barnResponse.data.farmId,
+                  )
                   try {
-                    const farmResponse = await api.get(`/farms/${barnResponse.data.farmId}`)
+                    const farmResponse = await api.get(
+                      `/farms/${barnResponse.data.farmId}`,
+                    )
                     console.log("Farm response:", farmResponse.data)
 
                     // Set farm name
@@ -304,7 +338,9 @@ export default function PigDashboard() {
         else if (pig?.currentLocation?.barnId) {
           console.log("Fetching barn with ID:", pig.currentLocation.barnId)
           try {
-            const barnResponse = await api.get(`/barns/${pig.currentLocation.barnId}`)
+            const barnResponse = await api.get(
+              `/barns/${pig.currentLocation.barnId}`,
+            )
             console.log("Barn response:", barnResponse.data)
 
             // Set barn name
@@ -315,9 +351,14 @@ export default function PigDashboard() {
 
             // Get farm data from barn
             if (barnResponse.data && barnResponse.data.farmId) {
-              console.log("Fetching farm with ID from barn:", barnResponse.data.farmId)
+              console.log(
+                "Fetching farm with ID from barn:",
+                barnResponse.data.farmId,
+              )
               try {
-                const farmResponse = await api.get(`/farms/${barnResponse.data.farmId}`)
+                const farmResponse = await api.get(
+                  `/farms/${barnResponse.data.farmId}`,
+                )
                 console.log("Farm response:", farmResponse.data)
 
                 // Set farm name
@@ -337,7 +378,9 @@ export default function PigDashboard() {
         else if (pig?.currentLocation?.farmId) {
           console.log("Fetching farm with ID:", pig.currentLocation.farmId)
           try {
-            const farmResponse = await api.get(`/farms/${pig.currentLocation.farmId}`)
+            const farmResponse = await api.get(
+              `/farms/${pig.currentLocation.farmId}`,
+            )
             console.log("Farm response:", farmResponse.data)
 
             // Set farm name
@@ -352,7 +395,7 @@ export default function PigDashboard() {
           console.log("No location IDs found in pig data")
         }
       } catch (error) {
-        console.error('Error in fetchLocationNames:', error)
+        console.error("Error in fetchLocationNames:", error)
       }
     }
 
@@ -363,7 +406,7 @@ export default function PigDashboard() {
 
   if (isLoading) {
     return (
-      <div className="flex items-center justify-center min-h-[60vh]">
+      <div className="flex min-h-[60vh] items-center justify-center">
         <div className="h-12 w-12 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
       </div>
     )
@@ -371,7 +414,7 @@ export default function PigDashboard() {
 
   if (error) {
     return (
-      <Card className="mx-auto max-w-md mt-8">
+      <Card className="mx-auto mt-8 max-w-md">
         <CardHeader>
           <CardTitle className="text-red-600">Error</CardTitle>
         </CardHeader>
@@ -387,7 +430,7 @@ export default function PigDashboard() {
 
   if (!pig) {
     return (
-      <Card className="mx-auto max-w-md mt-8">
+      <Card className="mx-auto mt-8 max-w-md">
         <CardHeader>
           <CardTitle>Pig Not Found</CardTitle>
         </CardHeader>
@@ -408,13 +451,10 @@ export default function PigDashboard() {
     return { label: "Attention Needed", variant: "warning" }
   }
 
-
-
-
   // Make sure pig is not null before rendering
   if (!pig) {
     return (
-      <Card className="mx-auto max-w-md mt-8">
+      <Card className="mx-auto mt-8 max-w-md">
         <CardHeader>
           <CardTitle>Pig Not Found</CardTitle>
         </CardHeader>
@@ -461,9 +501,12 @@ export default function PigDashboard() {
 
       {/* We'll use the dynamic health metrics cards instead of static ones */}
 
-
       {/* Main content tabs */}
-      <Tabs defaultValue="overview" className="w-full" onValueChange={setActiveTab}>
+      <Tabs
+        defaultValue="overview"
+        className="w-full"
+        onValueChange={setActiveTab}
+      >
         <TabsList className="mb-6">
           <TabsTrigger value="overview">Overview</TabsTrigger>
           <TabsTrigger value="health">Health Metrics</TabsTrigger>
@@ -483,25 +526,34 @@ export default function PigDashboard() {
               optimalRange="2.5-3.5"
               formatValue={(value) => value.toFixed(1)}
               formatMetric={(data) => {
-                if (!data || typeof data.score !== 'number') {
+                if (!data || typeof data.score !== "number") {
                   return {
                     value: 0,
                     status: "default",
                     label: "No Data",
                     trend: "No data available",
-                    trendDetail: "Unable to retrieve data"
-                  };
+                    trendDetail: "Unable to retrieve data",
+                  }
                 }
                 return {
                   value: data.score,
-                  status: data.score >= 2.5 && data.score <= 3.5 ? "success" :
-                    data.score < 2.0 || data.score > 4.0 ? "error" : "warning",
-                  label: data.score >= 2.5 && data.score <= 3.5 ? "Healthy" :
-                    data.score < 2.0 ? "Underweight" :
-                      data.score > 4.0 ? "Overweight" : "Borderline",
+                  status:
+                    data.score >= 2.5 && data.score <= 3.5
+                      ? "success"
+                      : data.score < 2.0 || data.score > 4.0
+                        ? "error"
+                        : "warning",
+                  label:
+                    data.score >= 2.5 && data.score <= 3.5
+                      ? "Healthy"
+                      : data.score < 2.0
+                        ? "Underweight"
+                        : data.score > 4.0
+                          ? "Overweight"
+                          : "Borderline",
                   trend: "Stable condition",
-                  trendDetail: "Based on recent measurements"
-                };
+                  trendDetail: "Based on recent measurements",
+                }
               }}
             />
 
@@ -513,24 +565,35 @@ export default function PigDashboard() {
               optimalRange="15-25 bpm"
               formatValue={(value) => `${value} bpm`}
               formatMetric={(data) => {
-                if (!data || typeof data.rate !== 'number') {
+                if (!data || typeof data.rate !== "number") {
                   return {
                     value: 0,
                     status: "default",
                     label: "No Data",
                     trend: "No data available",
-                    trendDetail: "Unable to retrieve data"
-                  };
+                    trendDetail: "Unable to retrieve data",
+                  }
                 }
                 return {
                   value: data.rate,
-                  status: data.rate >= 15 && data.rate <= 25 ? "success" :
-                    data.rate > 30 ? "error" : "warning",
-                  label: data.rate >= 15 && data.rate <= 25 ? "Normal" :
-                    data.rate > 30 ? "Critical" : "Elevated",
-                  trend: data.rate > 25 ? "Elevated breathing rate" : "Normal breathing rate",
-                  trendDetail: "Monitor for changes"
-                };
+                  status:
+                    data.rate >= 15 && data.rate <= 25
+                      ? "success"
+                      : data.rate > 30
+                        ? "error"
+                        : "warning",
+                  label:
+                    data.rate >= 15 && data.rate <= 25
+                      ? "Normal"
+                      : data.rate > 30
+                        ? "Critical"
+                        : "Elevated",
+                  trend:
+                    data.rate > 25
+                      ? "Elevated breathing rate"
+                      : "Normal breathing rate",
+                  trendDetail: "Monitor for changes",
+                }
               }}
             />
 
@@ -547,27 +610,33 @@ export default function PigDashboard() {
                   2: "Lying",
                   3: "Sitting",
                   4: "Moving",
-                  5: "Other"
-                };
+                  5: "Other",
+                }
 
-                if (!data || typeof data.score !== 'number') {
+                if (!data || typeof data.score !== "number") {
                   return {
                     value: 0,
                     status: "default",
                     label: "No Data",
                     trend: "No data available",
-                    trendDetail: "Unable to retrieve data"
-                  };
+                    trendDetail: "Unable to retrieve data",
+                  }
                 }
 
                 return {
                   value: data.score,
-                  status: data.score <= 2 ? "success" :
-                    data.score >= 4 ? "warning" : "default",
-                  label: postureLabels[data.score as keyof typeof postureLabels] || "Unknown",
+                  status:
+                    data.score <= 2
+                      ? "success"
+                      : data.score >= 4
+                        ? "warning"
+                        : "default",
+                  label:
+                    postureLabels[data.score as keyof typeof postureLabels] ||
+                    "Unknown",
                   trend: `Current posture: ${postureLabels[data.score as keyof typeof postureLabels] || "Unknown"}`,
-                  trendDetail: "Based on latest observation"
-                };
+                  trendDetail: "Based on latest observation",
+                }
               }}
             />
           </div>
@@ -578,77 +647,112 @@ export default function PigDashboard() {
           <div className="grid grid-cols-1 gap-6 lg:grid-cols-3">
             <Card className="lg:col-span-2">
               <div className="p-6">
-                <div className="flex items-center justify-between mb-4">
+                <div className="mb-4 flex items-center justify-between">
                   <div className="flex items-center gap-2">
                     <div className="h-10 w-10 rounded-full bg-blue-100 p-2 dark:bg-blue-900/20">
                       <Info className="h-6 w-6 text-blue-600 dark:text-blue-400" />
                     </div>
-                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">Pig Information</h2>
+                    <h2 className="text-lg font-semibold text-gray-900 dark:text-gray-50">
+                      Pig Information
+                    </h2>
                   </div>
-                  <Badge variant={pig?.active ? 'success' : 'error'} className="text-xs">
-                    {pig?.active ? 'Active' : 'Inactive'}
+                  <Badge
+                    variant={pig?.active ? "success" : "error"}
+                    className="text-xs"
+                  >
+                    {pig?.active ? "Active" : "Inactive"}
                   </Badge>
                 </div>
 
-                <div className="mb-6 p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
+                <div className="mb-6 rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
                   <div className="flex flex-wrap items-center gap-4">
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">ID:</span>
-                      <span className="text-base font-semibold text-gray-900 dark:text-gray-50">#{pig?.pigId}</span>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        ID:
+                      </span>
+                      <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                        #{pig?.pigId}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Tag:</span>
-                      <span className="text-base font-semibold text-gray-900 dark:text-gray-50">{pig?.tag}</span>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Tag:
+                      </span>
+                      <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                        {pig?.tag}
+                      </span>
                     </div>
                     <div className="flex items-center gap-2">
-                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">Breed:</span>
-                      <span className="text-base font-semibold text-gray-900 dark:text-gray-50">{pig?.breed}</span>
+                      <span className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                        Breed:
+                      </span>
+                      <span className="text-base font-semibold text-gray-900 dark:text-gray-50">
+                        {pig?.breed}
+                      </span>
                     </div>
                   </div>
                 </div>
 
                 <div className="grid grid-cols-1 gap-6 sm:grid-cols-3">
-                  <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                    <Clock className="h-6 w-6 text-gray-400 mb-2" />
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Age</h3>
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-50">{pig?.age}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">months</p>
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <Clock className="mb-2 h-6 w-6 text-gray-400" />
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Age
+                    </h3>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-50">
+                      {pig?.age}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      months
+                    </p>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                    <Calendar className="h-6 w-6 text-gray-400 mb-2" />
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Added</h3>
-                    <p className="text-xl font-bold text-gray-900 dark:text-gray-50">{new Date(pig?.lastUpdate || '').toLocaleDateString()}</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">registration date</p>
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <Calendar className="mb-2 h-6 w-6 text-gray-400" />
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Added
+                    </h3>
+                    <p className="text-xl font-bold text-gray-900 dark:text-gray-50">
+                      {new Date(pig?.lastUpdate || "").toLocaleDateString()}
+                    </p>
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
+                      registration date
+                    </p>
                   </div>
 
-                  <div className="flex flex-col items-center justify-center p-4 rounded-lg bg-gray-50 dark:bg-gray-800/50 border border-gray-100 dark:border-gray-700">
-                    <div className="h-6 w-6 text-gray-400 mb-2 flex items-center justify-center">
+                  <div className="flex flex-col items-center justify-center rounded-lg border border-gray-100 bg-gray-50 p-4 dark:border-gray-700 dark:bg-gray-800/50">
+                    <div className="mb-2 flex h-6 w-6 items-center justify-center text-gray-400">
                       <span className="text-lg font-bold">🏠</span>
                     </div>
-                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">Location</h3>
+                    <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+                      Location
+                    </h3>
                     <p className="text-xl font-bold text-gray-900 dark:text-gray-50">
                       {farmName}
                     </p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">
+                    <p className="mt-1 text-xs text-gray-500 dark:text-gray-400">
                       {barnName} • {stallName}
                     </p>
                   </div>
                 </div>
 
-                <div className="mt-6 pt-6 border-t border-gray-200 dark:border-gray-700">
-                  <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400 mb-3">Additional Information</h3>
+                <div className="mt-6 border-t border-gray-200 pt-6 dark:border-gray-700">
+                  <h3 className="mb-3 text-sm font-medium text-gray-500 dark:text-gray-400">
+                    Additional Information
+                  </h3>
                   <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
                     <div className="flex items-center gap-3">
                       <div className="h-8 w-8 rounded-full bg-purple-100 p-1.5 dark:bg-purple-900/20">
                         <Heart className="h-5 w-5 text-purple-600 dark:text-purple-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Health Status</p>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Health Status
+                        </p>
                         <p className="text-xs text-gray-500">
                           {healthHistory && healthHistory.length > 0
                             ? `Last check: ${new Date(healthHistory[0].timestamp).toLocaleDateString()}`
-                            : 'No health records'}
+                            : "No health records"}
                         </p>
                       </div>
                     </div>
@@ -658,7 +762,9 @@ export default function PigDashboard() {
                         <Activity className="h-5 w-5 text-green-600 dark:text-green-400" />
                       </div>
                       <div>
-                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">Activity Level</p>
+                        <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                          Activity Level
+                        </p>
                         <p className="text-xs text-gray-500">Normal range</p>
                       </div>
                     </div>
@@ -685,11 +791,7 @@ export default function PigDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
-                <LineChart
-                  yAxisWidth={70}
-                  type="bcs"
-                  className="h-80"
-                />
+                <LineChart yAxisWidth={70} type="bcs" className="h-80" />
               </CardContent>
             </Card>
 
@@ -704,11 +806,7 @@ export default function PigDashboard() {
                 </CardDescription>
               </CardHeader>
               <CardContent className="pt-4">
-                <LineChart
-                  yAxisWidth={70}
-                  type="breathing"
-                  className="h-80"
-                />
+                <LineChart yAxisWidth={70} type="breathing" className="h-80" />
               </CardContent>
             </Card>
           </div>
@@ -724,11 +822,7 @@ export default function PigDashboard() {
               </CardDescription>
             </CardHeader>
             <CardContent className="pt-4">
-              <LineChart
-                yAxisWidth={70}
-                type="vulva"
-                className="h-80"
-              />
+              <LineChart yAxisWidth={70} type="vulva" className="h-80" />
             </CardContent>
           </Card>
         </TabsContent>
@@ -783,7 +877,10 @@ export default function PigDashboard() {
                       <Badge variant="default">Score 1</Badge>
                       <h3 className="font-semibold">Lying flat on side</h3>
                     </div>
-                    <p className="mt-2 text-sm">Pig is lying completely flat on its side, often in deep sleep.</p>
+                    <p className="mt-2 text-sm">
+                      Pig is lying completely flat on its side, often in deep
+                      sleep.
+                    </p>
                   </div>
 
                   <div className="rounded-md bg-green-50 p-4 dark:bg-green-900/20">
@@ -791,7 +888,9 @@ export default function PigDashboard() {
                       <Badge variant="success">Score 2-3</Badge>
                       <h3 className="font-semibold">Lying on sternum</h3>
                     </div>
-                    <p className="mt-2 text-sm">Pig is lying on its sternum, a normal resting position.</p>
+                    <p className="mt-2 text-sm">
+                      Pig is lying on its sternum, a normal resting position.
+                    </p>
                   </div>
 
                   <div className="rounded-md bg-yellow-50 p-4 dark:bg-yellow-900/20">
@@ -799,7 +898,9 @@ export default function PigDashboard() {
                       <Badge variant="warning">Score 4</Badge>
                       <h3 className="font-semibold">Standing</h3>
                     </div>
-                    <p className="mt-2 text-sm">Pig is standing on all four legs, alert and active.</p>
+                    <p className="mt-2 text-sm">
+                      Pig is standing on all four legs, alert and active.
+                    </p>
                   </div>
 
                   <div className="rounded-md bg-red-50 p-4 dark:bg-red-900/20">
@@ -807,7 +908,10 @@ export default function PigDashboard() {
                       <Badge variant="error">Score 5</Badge>
                       <h3 className="font-semibold">Abnormal posture</h3>
                     </div>
-                    <p className="mt-2 text-sm">Pig is showing signs of discomfort or abnormal posture, may require attention.</p>
+                    <p className="mt-2 text-sm">
+                      Pig is showing signs of discomfort or abnormal posture,
+                      may require attention.
+                    </p>
                   </div>
                 </div>
               </CardContent>
@@ -830,49 +934,72 @@ export default function PigDashboard() {
                 {healthHistory && healthHistory.length > 0 ? (
                   healthHistory.slice(0, 5).map((record, index) => {
                     // Determine the color based on health status
-                    let statusColor = "bg-primary";
-                    if (record.status === "critical") statusColor = "bg-red-500";
-                    else if (record.status === "at risk") statusColor = "bg-yellow-500";
-                    else if (record.status === "healthy") statusColor = "bg-green-500";
-                    else if (record.status === "no movement") statusColor = "bg-gray-500";
+                    let statusColor = "bg-primary"
+                    if (record.status === "critical") statusColor = "bg-red-500"
+                    else if (record.status === "at risk")
+                      statusColor = "bg-yellow-500"
+                    else if (record.status === "healthy")
+                      statusColor = "bg-green-500"
+                    else if (record.status === "no movement")
+                      statusColor = "bg-gray-500"
 
                     // Format the date
-                    const recordDate = new Date(record.timestamp);
-                    const dateString = recordDate.toLocaleDateString();
-                    const timeString = recordDate.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+                    const recordDate = new Date(record.timestamp)
+                    const dateString = recordDate.toLocaleDateString()
+                    const timeString = recordDate.toLocaleTimeString([], {
+                      hour: "2-digit",
+                      minute: "2-digit",
+                    })
 
                     // Format metrics if available
-                    const metricsText = [];
+                    const metricsText = []
                     if (record.metrics) {
-                      if (record.metrics.temperature) metricsText.push(`Temperature: ${record.metrics.temperature}°C`);
-                      if (record.metrics.respiratoryRate) metricsText.push(`Respiratory Rate: ${record.metrics.respiratoryRate} bpm`);
-                      if (record.metrics.weight) metricsText.push(`Weight: ${record.metrics.weight} kg`);
+                      if (record.metrics.temperature)
+                        metricsText.push(
+                          `Temperature: ${record.metrics.temperature}°C`,
+                        )
+                      if (record.metrics.respiratoryRate)
+                        metricsText.push(
+                          `Respiratory Rate: ${record.metrics.respiratoryRate} bpm`,
+                        )
+                      if (record.metrics.weight)
+                        metricsText.push(`Weight: ${record.metrics.weight} kg`)
                     }
 
                     return (
                       <div className="flex gap-4" key={record._id}>
                         <div className="relative flex-none">
                           {index < healthHistory.length - 1 && (
-                            <div className="absolute left-2.5 top-0 bottom-0 w-px bg-gray-200 dark:bg-gray-800"></div>
+                            <div className="absolute bottom-0 left-2.5 top-0 w-px bg-gray-200 dark:bg-gray-800"></div>
                           )}
-                          <div className={`relative z-10 h-5 w-5 rounded-full ${statusColor}`}></div>
+                          <div
+                            className={`relative z-10 h-5 w-5 rounded-full ${statusColor}`}
+                          ></div>
                         </div>
                         <div className="flex-1 pt-0.5">
                           <p className="text-sm font-medium">
-                            Health Status: {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
+                            Health Status:{" "}
+                            {record.status.charAt(0).toUpperCase() +
+                              record.status.slice(1)}
                           </p>
-                          <p className="text-xs text-gray-500 dark:text-gray-400">{dateString} at {timeString}</p>
+                          <p className="text-xs text-gray-500 dark:text-gray-400">
+                            {dateString} at {timeString}
+                          </p>
                           {metricsText.length > 0 && (
-                            <p className="mt-2 text-sm">{metricsText.join(' • ')}</p>
+                            <p className="mt-2 text-sm">
+                              {metricsText.join(" • ")}
+                            </p>
                           )}
                           <p className="mt-1 text-sm">{record.notes}</p>
                         </div>
                       </div>
-                    );
+                    )
                   })
                 ) : (
-                  <div className="text-center py-6">
-                    <p className="text-gray-500">No health records found for this pig.</p>
+                  <div className="py-6 text-center">
+                    <p className="text-gray-500">
+                      No health records found for this pig.
+                    </p>
                     <Button
                       variant="light"
                       className="mt-2"
@@ -890,8 +1017,13 @@ export default function PigDashboard() {
                   </div>
                   <div className="flex-1 pt-0.5">
                     <p className="text-sm font-medium">Added to system</p>
-                    <p className="text-xs text-gray-500 dark:text-gray-400">{new Date(pig?.lastUpdate || '').toLocaleDateString()}</p>
-                    <p className="mt-2 text-sm">Pig #{pig?.pigId} with tag {pig?.tag} was added to the system</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">
+                      {new Date(pig?.lastUpdate || "").toLocaleDateString()}
+                    </p>
+                    <p className="mt-2 text-sm">
+                      Pig #{pig?.pigId} with tag {pig?.tag} was added to the
+                      system
+                    </p>
                   </div>
                 </div>
               </div>
@@ -901,20 +1033,30 @@ export default function PigDashboard() {
       </Tabs>
 
       {/* Action buttons */}
-      <div className="flex flex-wrap gap-3 justify-end">
-        <Button variant="light" onClick={() => setEditPigOpen(true)}>Edit Pig</Button>
-        <Button variant="light" onClick={handlePrintReport}>Print Report</Button>
-        <Button onClick={() => setAddHealthRecordOpen(true)}>Add Health Record</Button>
+      <div className="flex flex-wrap justify-end gap-3">
+        <Button variant="light" onClick={() => setEditPigOpen(true)}>
+          Edit Pig
+        </Button>
+        <Button variant="light" onClick={handlePrintReport}>
+          Print Report
+        </Button>
+        <Button onClick={() => setAddHealthRecordOpen(true)}>
+          Add Health Record
+        </Button>
       </div>
 
       {/* Edit Pig Drawer */}
       <EditPigDrawer
         open={editPigOpen}
         onOpenChange={setEditPigOpen}
-        pigData={pig ? {
-          ...pig,
-          currentLocation: pig.currentLocation || {}
-        } : null}
+        pigData={
+          pig
+            ? {
+                ...pig,
+                currentLocation: pig.currentLocation || {},
+              }
+            : null
+        }
         onSuccess={() => {
           // Refresh pig data after successful edit
           fetchPigData()

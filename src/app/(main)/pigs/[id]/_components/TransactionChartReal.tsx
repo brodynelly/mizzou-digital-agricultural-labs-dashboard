@@ -49,17 +49,21 @@ export function TransactionChart({
   const endParam = searchParams.get("end")
 
   // Parse date range
-  const startDate = startParam ? parse(startParam, "yyyy-MM-dd", new Date()) : undefined
-  const endDate = endParam ? parse(endParam, "yyyy-MM-dd", new Date()) : undefined
+  const startDate = startParam
+    ? parse(startParam, "yyyy-MM-dd", new Date())
+    : undefined
+  const endDate = endParam
+    ? parse(endParam, "yyyy-MM-dd", new Date())
+    : undefined
 
   // For debugging
   useEffect(() => {
     if (startDate || endDate) {
-      console.log('Date range changed in URL:', {
+      console.log("Date range changed in URL:", {
         startParam,
         endParam,
         startDate: startDate?.toISOString(),
-        endDate: endDate?.toISOString()
+        endDate: endDate?.toISOString(),
       })
     }
   }, [startParam, endParam, startDate, endDate])
@@ -94,17 +98,17 @@ export function TransactionChart({
   }
 
   // Use a ref to track if we've already fetched the data
-  const dataFetchedRef = useRef(false);
+  const dataFetchedRef = useRef(false)
 
   // Reset the dataFetchedRef when the date range changes
   useEffect(() => {
-    dataFetchedRef.current = false;
-  }, [startDate, endDate]);
+    dataFetchedRef.current = false
+  }, [startDate, endDate])
 
   useEffect(() => {
     // Skip fetching if we've already fetched data and nothing has changed
     if (dataFetchedRef.current && chartData.length > 0) {
-      return;
+      return
     }
 
     const fetchData = async () => {
@@ -114,21 +118,21 @@ export function TransactionChart({
 
         // Fetch aggregated posture data from the correct endpoint with date range parameters
         // Make sure we're using the full URL with the correct port
-        const params = new URLSearchParams();
+        const params = new URLSearchParams()
 
         // Add date range parameters if available
         if (startDate && isValid(startDate)) {
-          params.append('start', format(startDate, 'yyyy-MM-dd'));
+          params.append("start", format(startDate, "yyyy-MM-dd"))
         }
 
         if (endDate && isValid(endDate)) {
-          params.append('end', format(endDate, 'yyyy-MM-dd'));
+          params.append("end", format(endDate, "yyyy-MM-dd"))
         }
 
-        const queryString = params.toString();
+        const queryString = params.toString()
         // Use the direct endpoint for the aggregated posture data
-        const url = `http://localhost:8080/api/pigs/${pigId}/posture/aggregated${queryString ? `?${queryString}` : ''}`;
-        console.log('Fetching posture data with URL:', url);
+        const url = `http://localhost:8080/api/pigs/${pigId}/posture/aggregated${queryString ? `?${queryString}` : ""}`
+        console.log("Fetching posture data with URL:", url)
 
         const response = await fetch(url)
         if (!response.ok) {
@@ -137,70 +141,82 @@ export function TransactionChart({
         const data = await response.json()
 
         // Extract the data and date range from the response
-        let filteredData = Array.isArray(data) ? data : (data.data || [])
+        let filteredData = Array.isArray(data) ? data : data.data || []
 
         // Store the available date range in a global variable or context
         if (data.dateRange && !window.pigPostureDateRange) {
           // Store min and max dates for use in the DateRangeSelector
           window.pigPostureDateRange = data.dateRange
-          console.log('Available date range:', data.dateRange)
+          console.log("Available date range:", data.dateRange)
         }
 
         // Mark that we've fetched data
-        dataFetchedRef.current = true;
+        dataFetchedRef.current = true
 
-        console.log('Date range:', { startDate, endDate })
-        console.log('Data count from backend:', filteredData.length)
+        console.log("Date range:", { startDate, endDate })
+        console.log("Data count from backend:", filteredData.length)
 
         // Log the first few items for debugging
-        console.log('Aggregated posture data sample:', JSON.stringify(filteredData.slice(0, 3)))
+        console.log(
+          "Aggregated posture data sample:",
+          JSON.stringify(filteredData.slice(0, 3)),
+        )
 
         if (type === "amount") {
           // Process the aggregated data for the chart
-          console.log('Processing data for chart...')
+          console.log("Processing data for chart...")
           if (filteredData.length === 0) {
-            console.log('No data to process after filtering!')
+            console.log("No data to process after filtering!")
             setIsLoading(false)
             return
           }
 
-          let processedData: ChartDataItem[] = filteredData.map((dayData: any) => {
-            // Create a chart data item with the date
-            const chartItem: any = { date: dayData.date }
+          let processedData: ChartDataItem[] = filteredData.map(
+            (dayData: any) => {
+              // Create a chart data item with the date
+              const chartItem: any = { date: dayData.date }
 
-            // If showing percentages, use the pre-calculated percentages
-            if (showPercentage) {
-              // Add percentage values for each score
-              for (let score = 1; score <= 5; score++) {
-                chartItem[score.toString()] = dayData.percentages[score] || 0
+              // If showing percentages, use the pre-calculated percentages
+              if (showPercentage) {
+                // Add percentage values for each score
+                for (let score = 1; score <= 5; score++) {
+                  chartItem[score.toString()] = dayData.percentages[score] || 0
+                }
+              } else {
+                // Otherwise use the raw counts
+                for (let score = 1; score <= 5; score++) {
+                  chartItem[score.toString()] = dayData.counts[score] || 0
+                }
               }
-            } else {
-              // Otherwise use the raw counts
-              for (let score = 1; score <= 5; score++) {
-                chartItem[score.toString()] = dayData.counts[score] || 0
-              }
-            }
 
-            return chartItem as ChartDataItem
-          })
+              return chartItem as ChartDataItem
+            },
+          )
 
           // Sort by date
-          processedData.sort((a: any, b: any) =>
-            new Date(a.date).getTime() - new Date(b.date).getTime()
+          processedData.sort(
+            (a: any, b: any) =>
+              new Date(a.date).getTime() - new Date(b.date).getTime(),
           )
 
           setChartData(processedData)
         } else if (type === "category") {
           // For category chart, aggregate all data
-          console.log('Processing data for category chart...')
+          console.log("Processing data for category chart...")
           if (filteredData.length === 0) {
-            console.log('No data to process after filtering!')
+            console.log("No data to process after filtering!")
             setIsLoading(false)
             return
           }
 
           const categories = ["Standing", "Lying", "Sitting", "Moving", "Other"]
-          const counts = { "Standing": 0, "Lying": 0, "Sitting": 0, "Moving": 0, "Other": 0 }
+          const counts = {
+            Standing: 0,
+            Lying: 0,
+            Sitting: 0,
+            Moving: 0,
+            Other: 0,
+          }
 
           // Sum up all counts across all days
           filteredData.forEach((dayData: any) => {
@@ -211,9 +227,9 @@ export function TransactionChart({
             counts["Other"] += dayData.counts[5] || 0
           })
 
-          const categoryData: ChartDataItem[] = categories.map(category => ({
+          const categoryData: ChartDataItem[] = categories.map((category) => ({
             key: category,
-            value: counts[category as keyof typeof counts]
+            value: counts[category as keyof typeof counts],
           })) as ChartDataItem[]
 
           setChartData(categoryData)
@@ -229,7 +245,7 @@ export function TransactionChart({
     if (pigId) {
       fetchData()
     }
-  }, [pigId, startDate, endDate, type, showPercentage])
+  }, [pigId, startDate, endDate, type, showPercentage, chartData.length])
 
   const config = chartConfigs[type]
 
@@ -239,7 +255,7 @@ export function TransactionChart({
     "2": "Lying",
     "3": "Sitting",
     "4": "Moving",
-    "5": "Other"
+    "5": "Other",
   }
 
   // Determine categories based on chart type
@@ -272,7 +288,7 @@ export function TransactionChart({
 
   return (
     <div className={cx(className, "w-full")}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-2">
           <h2
             id={`${type}-chart-title`}
@@ -315,28 +331,36 @@ export function TransactionChart({
           barCategoryGap="6%"
           aria-labelledby={`${type}-chart-title`}
           customTooltip={(props) => {
-            if (!props.active || !props.payload?.length) return null;
+            if (!props.active || !props.payload?.length) return null
 
             return (
               <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-md dark:border-gray-800 dark:bg-gray-900">
                 <p className="mb-2 font-medium">{props.label}</p>
                 {props.payload.map((entry: any, index) => {
-                  const categoryKey = entry.dataKey as string;
-                  const categoryLabel = type === "amount" ?
-                    (postureCategoryLabels as any)[categoryKey] || categoryKey :
-                    categoryKey;
+                  const categoryKey = entry.dataKey as string
+                  const categoryLabel =
+                    type === "amount"
+                      ? (postureCategoryLabels as any)[categoryKey] ||
+                        categoryKey
+                      : categoryKey
                   return (
                     <div key={index} className="flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-sm"
                         style={{ backgroundColor: entry.color }}
                       />
-                      <span className="text-sm">{categoryLabel}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}{showPercentage ? '%' : ''}</span>
+                      <span className="text-sm">
+                        {categoryLabel}:{" "}
+                        {typeof entry.value === "number"
+                          ? entry.value.toFixed(2)
+                          : entry.value}
+                        {showPercentage ? "%" : ""}
+                      </span>
                     </div>
-                  );
+                  )
                 })}
               </div>
-            );
+            )
           }}
         />
       )}

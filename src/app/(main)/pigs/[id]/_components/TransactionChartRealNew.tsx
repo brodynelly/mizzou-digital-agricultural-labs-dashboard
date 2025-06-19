@@ -5,6 +5,7 @@ import { AvailableChartColorsKeys } from "@/lib/chartUtils"
 import { cx } from "@/lib/utils"
 import { InfoIcon } from "lucide-react"
 import { useMemo } from "react"
+import { DateRangeSelectorSimple } from "./DateRangeSelectorSimple"
 import { usePostureData } from "./PostureDataProvider"
 
 type ChartType = "amount" | "category"
@@ -95,15 +96,16 @@ export function TransactionChart({
       })
 
       // Sort by date
-      processedData.sort((a: any, b: any) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+      processedData.sort(
+        (a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime(),
       )
 
       return processedData
     } else if (type === "category") {
       // For category chart, aggregate all data
       const categories = ["Standing", "Lying", "Sitting", "Moving", "Other"]
-      const counts = { "Standing": 0, "Lying": 0, "Sitting": 0, "Moving": 0, "Other": 0 }
+      const counts = { Standing: 0, Lying: 0, Sitting: 0, Moving: 0, Other: 0 }
 
       // Sum up all counts across all days
       postureData.forEach((dayData: any) => {
@@ -114,9 +116,9 @@ export function TransactionChart({
         counts["Other"] += dayData.counts[5] || 0
       })
 
-      const categoryData: ChartDataItem[] = categories.map(category => ({
+      const categoryData: ChartDataItem[] = categories.map((category) => ({
         key: category,
-        value: counts[category as keyof typeof counts]
+        value: counts[category as keyof typeof counts],
       })) as ChartDataItem[]
 
       return categoryData
@@ -133,7 +135,7 @@ export function TransactionChart({
     "2": "Lying",
     "3": "Sitting",
     "4": "Moving",
-    "5": "Other"
+    "5": "Other",
   }
 
   // Determine categories based on chart type
@@ -166,7 +168,7 @@ export function TransactionChart({
 
   return (
     <div className={cx(className, "w-full")}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="mb-4 flex items-center justify-between">
         <div className="flex gap-2">
           <h2
             id={`${type}-chart-title`}
@@ -209,28 +211,36 @@ export function TransactionChart({
           barCategoryGap="6%"
           aria-labelledby={`${type}-chart-title`}
           customTooltip={(props) => {
-            if (!props.active || !props.payload?.length) return null;
+            if (!props.active || !props.payload?.length) return null
 
             return (
               <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-md dark:border-gray-800 dark:bg-gray-900">
                 <p className="mb-2 font-medium">{props.label}</p>
                 {props.payload.map((entry: any, index) => {
-                  const categoryKey = entry.dataKey as string;
-                  const categoryLabel = type === "amount" ?
-                    (postureCategoryLabels as any)[categoryKey] || categoryKey :
-                    categoryKey;
+                  const categoryKey = entry.dataKey as string
+                  const categoryLabel =
+                    type === "amount"
+                      ? (postureCategoryLabels as any)[categoryKey] ||
+                        categoryKey
+                      : categoryKey
                   return (
                     <div key={index} className="flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-sm"
                         style={{ backgroundColor: entry.color }}
                       />
-                      <span className="text-sm">{categoryLabel}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}{showPercentage ? '%' : ''}</span>
+                      <span className="text-sm">
+                        {categoryLabel}:{" "}
+                        {typeof entry.value === "number"
+                          ? entry.value.toFixed(2)
+                          : entry.value}
+                        {showPercentage ? "%" : ""}
+                      </span>
                     </div>
-                  );
+                  )
                 })}
               </div>
-            );
+            )
           }}
         />
       )}

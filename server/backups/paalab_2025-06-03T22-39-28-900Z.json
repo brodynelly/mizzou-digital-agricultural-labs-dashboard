@@ -1,0 +1,140 @@
+{
+  "database": "paalab",
+  "createdAt": "2025-06-03T22:39:28.910Z",
+  "collections": {
+    "paalab": [],
+    "pigfertilities": [],
+    "pigvulvaswellings": [],
+    "stalls": [],
+    "farms": [],
+    "pigs": [],
+    "temperaturedatas": [],
+    "pigbreathrates": [],
+    "users": [
+      {
+        "_id": "67f1cac0399bf2dda1ea08a8",
+        "email": "admin@test.com",
+        "password": "admin123",
+        "firstName": "Admin",
+        "lastName": "User",
+        "role": "admin",
+        "isActive": true,
+        "createdAt": "2025-06-03T22:23:46.752Z",
+        "updatedAt": "2025-06-03T22:30:59.566Z",
+        "lastLogin": "2025-06-03T22:30:59.566Z"
+      },
+      {
+        "_id": "67f1cac0399bf2dda1ea08a9",
+        "email": "farmer@test.com",
+        "password": "farmer123",
+        "firstName": "Farmer",
+        "lastName": "User",
+        "role": "farmer",
+        "isActive": true,
+        "createdAt": "2025-06-03T22:23:46.752Z",
+        "updatedAt": "2025-06-03T22:23:46.768Z",
+        "lastLogin": "2025-06-03T22:23:46.752Z"
+      }
+    ],
+    "pigheatstatuses": [],
+    "barns": [],
+    "pigpostures": [],
+    "devices": [],
+    "pigbcs": [],
+    "pighealthstatuses": [],
+    "activitylogs": [
+      {
+        "_id": "683e9166f795190720d591ed",
+        "type": "user",
+        "action": "created",
+        "description": "User \"admin@test.com\" was added to the system",
+        "entityId": "67f1cac0399bf2dda1ea08a8",
+        "metadata": {
+          "email": "admin@test.com",
+          "role": "admin",
+          "name": "Admin User"
+        },
+        "createdAt": "2025-06-03T06:08:38.199Z",
+        "updatedAt": "2025-06-03T06:08:38.199Z",
+        "__v": 0
+      },
+      {
+        "_id": "683e9166f795190720d591f1",
+        "type": "user",
+        "action": "created",
+        "description": "User \"farmer@test.com\" was added to the system",
+        "entityId": "67f1cac0399bf2dda1ea08a9",
+        "metadata": {
+          "email": "farmer@test.com",
+          "role": "farmer",
+          "name": "Farmer User"
+        },
+        "createdAt": "2025-06-03T06:08:38.210Z",
+        "updatedAt": "2025-06-03T06:08:38.210Z",
+        "__v": 0
+      },
+      {
+        "_id": "683e9258f795190720d593df",
+        "type": "user",
+        "action": "login",
+        "description": "User \"admin@test.com\" logged in",
+        "userId": "67f1cac0399bf2dda1ea08a8",
+        "metadata": {
+          "email": "admin@test.com",
+          "role": "admin",
+          "name": "Admin User"
+        },
+        "ipAddress": "192.168.65.1",
+        "createdAt": "2025-06-03T06:12:40.859Z",
+        "updatedAt": "2025-06-03T06:12:40.859Z",
+        "__v": 0
+      },
+      {
+        "_id": "683e9258f795190720d593eb",
+        "type": "user",
+        "action": "updated",
+        "description": "User \"admin@test.com\" was updated",
+        "entityId": "67f1cac0399bf2dda1ea08a8",
+        "metadata": {
+          "email": "admin@test.com",
+          "role": "admin",
+          "name": "Admin User"
+        },
+        "createdAt": "2025-06-03T06:12:40.894Z",
+        "updatedAt": "2025-06-03T06:12:40.894Z",
+        "__v": 0
+      },
+      {
+        "_id": "683f77a34206e1422ed03a73",
+        "type": "user",
+        "action": "login",
+        "description": "User \"admin@test.com\" logged in",
+        "userId": "67f1cac0399bf2dda1ea08a8",
+        "metadata": {
+          "email": "admin@test.com",
+          "role": "admin",
+          "name": "Admin User"
+        },
+        "ipAddress": "192.168.65.1",
+        "createdAt": "2025-06-03T22:30:59.579Z",
+        "updatedAt": "2025-06-03T22:30:59.579Z",
+        "__v": 0
+      },
+      {
+        "_id": "683f77a34206e1422ed03a7f",
+        "type": "user",
+        "action": "updated",
+        "description": "User \"admin@test.com\" was updated",
+        "entityId": "67f1cac0399bf2dda1ea08a8",
+        "metadata": {
+          "email": "admin@test.com",
+          "role": "admin",
+          "name": "Admin User"
+        },
+        "createdAt": "2025-06-03T22:30:59.590Z",
+        "updatedAt": "2025-06-03T22:30:59.590Z",
+        "__v": 0
+      }
+    ]
+  }
+}
