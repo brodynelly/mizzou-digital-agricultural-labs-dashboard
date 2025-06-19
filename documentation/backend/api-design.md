@@ -1044,7 +1044,7 @@ Deletes a farm (admin only).
 - **Auth Required**: Yes (Admin)
 
 **Query Parameters**:
-- `cascade` (optional): If "true", deletes all associated barns, stalls, and pigs
+- `cascade` (required): Must be "true" to delete a farm. When provided, all associated barns, stalls, pigs, and devices are also deleted
 
 **Success Response (200 OK)**:
 ```json
@@ -1054,6 +1054,7 @@ Deletes a farm (admin only).
 ```
 
 **Error Responses**:
+- `400 Bad Request`: `cascade=true` not supplied
 - `401 Unauthorized`: Not authenticated
 - `403 Forbidden`: Not authorized as admin
 - `404 Not Found`: Farm not found
