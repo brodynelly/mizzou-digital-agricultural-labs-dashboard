@@ -74,7 +74,7 @@ router.post('/:pig_id', limiter, upload.single('file'), async (req, res) => {
 
             // Save the posture data
             const postureData = new PigPosture({
-              pigId: pig._id,
+              pigId: pig.pigId,
               timestamp: isoTimestamp,
               score: Posture,
             });
