@@ -6,6 +6,8 @@ const PigBCS = require('../models/PigBCS')
 const PigHealthStatus = require('../models/PigHealthStatus')
 const PigFertility = require('../models/PigFertility')
 const PigHeatStatus = require('../models/PigHeatStatus')
+const PigBreathRate = require('../models/PigBreathRate')
+const PigVulvaSwelling = require('../models/PigVulvaSwelling')
 const rateLimit = require('express-rate-limit')
 
 const mongoose = require('mongoose'); // Add this line at the top
@@ -704,19 +706,22 @@ router.delete('/', async (req, res) => {
     const { pigIds } = req.body
     const numericPigIds = pigIds.map(id => parseInt(id)).filter(id => !isNaN(id))
 
-    // Find pigs to get their ObjectIds
+    // Verify pigs exist
     const pigs = await Pig.find({ pigId: { $in: numericPigIds } })
     if (!pigs.length) {
       return res.status(404).json({ error: 'No pigs found with the given IDs' })
     }
 
-    const pigObjectIds = pigs.map(pig => pig._id)
-
     // Delete pigs and related data
     const result = await Pig.deleteMany({ pigId: { $in: numericPigIds } })
     await Promise.all([
-      PigBCS.deleteMany({ pigId: { $in: pigObjectIds } }),
-      PigHealthStatus.deleteMany({ pigId: { $in: pigObjectIds } })
+      PigBCS.deleteMany({ pigId: { $in: numericPigIds } }),
+      PigHealthStatus.deleteMany({ pigId: { $in: numericPigIds } }),
+      PigPosture.deleteMany({ pigId: { $in: numericPigIds } }),
+      PigFertility.deleteMany({ pigId: { $in: numericPigIds } }),
+      PigHeatStatus.deleteMany({ pigId: { $in: numericPigIds } }),
+      PigBreathRate.deleteMany({ pigId: { $in: numericPigIds } }),
+      PigVulvaSwelling.deleteMany({ pigId: { $in: numericPigIds } })
     ])
 
     res.json({
