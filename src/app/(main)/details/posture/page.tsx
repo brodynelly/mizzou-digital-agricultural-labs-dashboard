@@ -9,24 +9,35 @@ export default function PosturePage() {
 
   // Initial data fetch
   useEffect(() => {
+    const controller = new AbortController()
+    let isMounted = true
+
     const fetchData = async () => {
       try {
         // This would need to be updated to fetch all posture data, not just for a specific pig
-        const response = await fetch('/api/pigs/posture')
+        const response = await fetch('/api/pigs/posture', { signal: controller.signal })
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
+        if (!isMounted) return
         setPostureData(data)
         setIsLoading(false)
-      } catch (error) {
+      } catch (error: any) {
+        if (error.name === 'AbortError') return
         console.error('Error fetching posture data:', error)
+        if (!isMounted) return
         setError('Failed to fetch posture data. Please try again later.')
         setIsLoading(false)
       }
     }
 
     fetchData()
+
+    return () => {
+      isMounted = false
+      controller.abort()
+    }
   }, [])
 
   if (isLoading) {
