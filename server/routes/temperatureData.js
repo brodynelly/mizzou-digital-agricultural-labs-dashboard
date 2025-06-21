@@ -48,10 +48,17 @@ router.post('/', authenticateJWT, async (req, res) => {
     const lastRecord = await TemperatureData.findOne().sort({ recordId: -1 })
     const newRecordId = (lastRecord?.recordId || 0) + 1
 
+    const deviceId = parseInt(req.body.deviceId)
+    const temperature = parseFloat(req.body.temperature)
+
+    if (isNaN(deviceId) || !Number.isFinite(temperature)) {
+      return res.status(400).json({ error: 'Invalid deviceId or temperature' })
+    }
+
     const newRecord = await TemperatureData.create({
       recordId: newRecordId,
-      deviceId: parseInt(req.body.deviceId),
-      temperature: parseFloat(req.body.temperature),
+      deviceId,
+      temperature,
       timestamp: req.body.timestamp || new Date()
     })
 
@@ -66,9 +73,16 @@ router.post('/', authenticateJWT, async (req, res) => {
 router.put('/:recordId', authenticateJWT, async (req, res) => {
   try {
     const recordId = parseInt(req.params.recordId)
+    const deviceId = parseInt(req.body.deviceId)
+    const temperature = parseFloat(req.body.temperature)
+
+    if (isNaN(deviceId) || !Number.isFinite(temperature)) {
+      return res.status(400).json({ error: 'Invalid deviceId or temperature' })
+    }
+
     const updates = {
-      deviceId: parseInt(req.body.deviceId),
-      temperature: parseFloat(req.body.temperature),
+      deviceId,
+      temperature,
       timestamp: req.body.timestamp ? new Date(req.body.timestamp) : new Date()
     }
     
