@@ -20,7 +20,9 @@ export default function PosturePage() {
         setPostureData(data)
         setIsLoading(false)
       } catch (error) {
-        console.error('Error fetching posture data:', error)
+        if (process.env.NODE_ENV === 'development') {
+          console.error('Error fetching posture data:', error)
+        }
         setError('Failed to fetch posture data. Please try again later.')
         setIsLoading(false)
       }
@@ -51,8 +53,13 @@ export default function PosturePage() {
         Pig Posture Data
       </h1>
       <div className="mt-4 sm:mt-6 lg:mt-10">
-        <p className="mb-4">This page will display posture data for all pigs.</p>
-        {/* Add your posture data table or visualization here */}
+        {postureData.length === 0 ? (
+          <p className="text-sm text-gray-500 dark:text-gray-400">No posture data available.</p>
+        ) : (
+          <pre className="whitespace-pre-wrap rounded-md bg-gray-100 p-4 text-xs dark:bg-gray-800">
+            {JSON.stringify(postureData, null, 2)}
+          </pre>
+        )}
       </div>
     </>
   )
