@@ -100,10 +100,11 @@ router.get('/', async (req, res) => {
     }, {});
 
     // Process fertility data
-    const fertilityStats = pigFertilityData.reduce((acc, curr) => {
-      acc[curr._id.toLowerCase().replace(/\s+/g, '')] = curr.count;
-      return acc;
-    }, {});
+  const fertilityStats = pigFertilityData.reduce((acc, curr) => {
+    const key = curr._id.toLowerCase().replace(/[\s-]+/g, '');
+    acc[key] = curr.count;
+    return acc;
+  }, {});
 
     // Process heat status data
     const pigHeatStats = {
@@ -181,10 +182,10 @@ router.get('/', async (req, res) => {
       barnStats,
       stallStats,
       pigFertilityStats: {
-        InHeat: fertilityStats['in-heat'] || 0,
-        PreHeat: fertilityStats['pre-heat'] || 0,
+        InHeat: fertilityStats['inheat'] || 0,
+        PreHeat: fertilityStats['preheat'] || 0,
         Open: fertilityStats['open'] || 0,
-        ReadyToBreed: fertilityStats['ready-to-breed'] || 0,
+        ReadyToBreed: fertilityStats['readytobreed'] || 0,
       },
       farmBarnStallStats: {
         totalFarms: farmCount,

@@ -123,7 +123,8 @@ const emitUpdatedStats = async (io) => {
     ]);
 
     const fertilityStats = pigFertilityAggregated.reduce((acc, curr) => {
-      acc[curr._id.toLowerCase().replace(/\\s+/g, '')] = curr.count;
+      const key = curr._id.toLowerCase().replace(/[\s-]+/g, '');
+      acc[key] = curr.count;
       return acc;
     }, {});
 
