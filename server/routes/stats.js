@@ -15,8 +15,9 @@ const Stall = mongoose.model('Stall');
 const PigHealthStatus = require('../models/PigHealthStatus');
 const PigFertility = mongoose.model('PigFertility');
 const PigHeatStatus = mongoose.model('PigHeatStatus');
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware');
 
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, isAdmin, async (req, res) => {
   try {
     // Execute all independent queries in parallel
     const [
