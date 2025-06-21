@@ -285,7 +285,7 @@ const FirstPage = ({
                 variant="ghost"
                 className="p-2 text-gray-500 hover:bg-red-50 hover:text-red-500 dark:text-gray-500 hover:dark:text-gray-300"
                 onClick={async () => {
-                  await deleteEntity("farms", selectedFarmId)
+                  await deleteEntity("farms", selectedFarmId, true)
                   setSelectedFarmId(null)
                   refreshData()
                 }}

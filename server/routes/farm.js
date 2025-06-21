@@ -259,24 +259,30 @@ router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
 router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { cascade } = req.query; // Add ?cascade=true to delete associated data
-    
+
     const farm = await Farm.findById(req.params.id);
     if (!farm) {
       return res.status(404).json({ error: 'Farm not found' });
     }
-    
-    // If cascade is true, delete all associated data
-    if (cascade === 'true') {
-      await Promise.all([
-        Barn.deleteMany({ farmId: farm._id }),
-        Stall.deleteMany({ farmId: farm._id }),
-        Pig.deleteMany({ 'currentLocation.farmId': farm._id }),
-        Device.deleteMany({ farmId: farm._id })
-      ]);
+
+    // Require cascade flag to avoid orphaned resources
+    if (cascade !== 'true') {
+      return res.status(400).json({
+        error:
+          'Deleting a farm without cascade=true would orphan related resources.'
+      });
     }
-    
+
+    // Delete all associated data when cascade=true
+    await Promise.all([
+      Barn.deleteMany({ farmId: farm._id }),
+      Stall.deleteMany({ farmId: farm._id }),
+      Pig.deleteMany({ 'currentLocation.farmId': farm._id }),
+      Device.deleteMany({ farmId: farm._id })
+    ]);
+
     await Farm.findByIdAndDelete(req.params.id);
-    
+
     res.json({ message: 'Farm deleted successfully' });
   } catch (error) {
     console.error('Error deleting farm:', error);
