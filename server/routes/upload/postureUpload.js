@@ -5,6 +5,7 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
 const RateLimit = require('express-rate-limit');  // Import the rate limit package
+const { authenticateJWT } = require('../../middleware/authMiddleware');
 const Pig = require('../../models/Pig');
 const PigPosture = require('../../models/PostureData');
 
@@ -21,8 +22,8 @@ const limiter = RateLimit({
   message: 'Too many requests from this IP, please try again after 15 minutes',
 });
 
-// Apply the rate limiter to the specific route
-router.post('/:pig_id', limiter, upload.single('file'), async (req, res) => {
+// Apply the rate limiter and authentication middleware to the upload route
+router.post('/:pig_id', limiter, authenticateJWT, upload.single('file'), async (req, res) => {
   const { pig_id } = req.params;
 
   // Validate the pig_id
