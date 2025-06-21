@@ -245,8 +245,7 @@ router.get('/:id/posture', async (req, res) => {
       .sort({ timestamp: -1 })
       .limit(100) // Limited to 100 records for performance
 
-    // Log the data for debugging
-    console.log('Fetched posture data:', JSON.stringify(postureData.slice(0, 3)))
+    // console.log('Fetched posture data:', JSON.stringify(postureData.slice(0, 3)))
 
     // Return the raw data without any transformation
     res.json(postureData)
@@ -266,12 +265,12 @@ router.get('/:id/posture/aggregated', async (req, res) => {
 
     // Get date range from query parameters
     const { start, end } = req.query;
-    console.log('Received date range parameters:', { start, end });
+    // console.log('Received date range parameters:', { start, end });
 
     // We'll use MongoDB's aggregation pipeline for date filtering
 
     // Use MongoDB aggregation pipeline for more robust date filtering
-    console.log('Processing date range parameters:', { start, end });
+    // console.log('Processing date range parameters:', { start, end });
 
     // Build the aggregation pipeline
     const pipeline = [
@@ -310,12 +309,12 @@ router.get('/:id/posture/aggregated', async (req, res) => {
 
       if (start) {
         dateFilter.$gte = start;
-        console.log(`Filtering for dates >= ${start}`);
+        // console.log(`Filtering for dates >= ${start}`);
       }
 
       if (end) {
         dateFilter.$lte = end;
-        console.log(`Filtering for dates <= ${end}`);
+        // console.log(`Filtering for dates <= ${end}`);
       }
 
       if (Object.keys(dateFilter).length > 0) {
@@ -325,50 +324,32 @@ router.get('/:id/posture/aggregated', async (req, res) => {
           }
         });
 
-        console.log('Using date range filter:', dateFilter);
+        // console.log('Using date range filter:', dateFilter);
       }
     } else {
-      console.log('No date range parameters provided, fetching all data');
+      // console.log('No date range parameters provided, fetching all data');
     }
 
-    // Add a debug stage to see what's happening with the dates
-    if (start || end) {
-      // This is just for debugging - we'll remove it in production
-      pipeline.push({
-        $addFields: {
-          debug: {
-            originalTimestamp: "$timestamp",
-            normalizedTimestamp: "$normalizedTimestamp",
-            dateStr: "$dateStr",
-            matchesFilter: {
-              $and: [
-                { $gte: ["$dateStr", start || "0000-00-00"] },
-                { $lte: ["$dateStr", end || "9999-99-99"] }
-              ]
-            }
-          }
-        }
-      });
-    }
+    // Debug stage removed in production
 
     // Stage 4: Sort by timestamp
     pipeline.push({
       $sort: { timestamp: 1 }
     });
 
-    console.log(`Executing aggregation pipeline:`, JSON.stringify(pipeline, null, 2));
+    // console.log(`Executing aggregation pipeline:`, JSON.stringify(pipeline, null, 2));
 
     // Execute the aggregation pipeline with error handling
     let postureData;
     try {
       postureData = await PigPosture.aggregate(pipeline);
-      console.log(`Successfully aggregated posture data: ${postureData.length} records found`);
+      // console.log(`Successfully aggregated posture data: ${postureData.length} records found`);
     } catch (error) {
       console.error('Error aggregating posture data:', error);
       // Fall back to a simpler query if aggregation fails
-      console.log('Falling back to simple query without aggregation');
+      // console.log('Falling back to simple query without aggregation');
       postureData = await PigPosture.find({ pigId: id }).sort({ timestamp: 1 });
-      console.log(`Retrieved ${postureData.length} records using fallback query`);
+      // console.log(`Retrieved ${postureData.length} records using fallback query`);
     }
 
     // Log some sample data for debugging
@@ -377,15 +358,15 @@ router.get('/:id/posture/aggregated', async (req, res) => {
       const timestamp = postureData[0].timestamp;
       const isDateObject = timestamp instanceof Date;
 
-      console.log(`Sample data (first record):`, {
-        timestamp: timestamp,
-        isDateObject: isDateObject,
-        dateStr: postureData[0].dateStr || 'N/A',
-        score: postureData[0].score
-      });
+      // console.log(`Sample data (first record):`, {
+      //   timestamp: timestamp,
+      //   isDateObject: isDateObject,
+      //   dateStr: postureData[0].dateStr || 'N/A',
+      //   score: postureData[0].score
+      // });
     }
 
-    console.log(`Fetched posture data for pig ${id}: ${postureData.length} records`)
+    // console.log(`Fetched posture data for pig ${id}: ${postureData.length} records`)
 
     // Group the real data by date
     const groupedByDate = {};
@@ -427,11 +408,11 @@ router.get('/:id/posture/aggregated', async (req, res) => {
       }
     });
 
-    console.log(`Grouped data by date: ${Object.keys(groupedByDate).length} days with data`);
+    // console.log(`Grouped data by date: ${Object.keys(groupedByDate).length} days with data`);
 
     // If no data was found, return an empty array with date range info
     if (Object.keys(groupedByDate).length === 0) {
-      console.log('No real data found for the requested date range');
+      // console.log('No real data found for the requested date range');
 
       // Return empty data with date range info
       return res.json({
@@ -464,7 +445,7 @@ router.get('/:id/posture/aggregated', async (req, res) => {
     // Sort by date (oldest to newest)
     aggregatedData.sort((a, b) => new Date(a.date).getTime() - new Date(b.date).getTime())
 
-    console.log(`Aggregated data: ${aggregatedData.length} days of data`)
+    // console.log(`Aggregated data: ${aggregatedData.length} days of data`)
 
     // Find the min and max dates in the data
     const dates = aggregatedData.map(item => new Date(item.date).getTime());
@@ -568,7 +549,7 @@ router.get('/:id/posture/latest', async (req, res) => {
     }
 
     // Log the data for debugging
-    console.log('Latest posture data:', JSON.stringify(latestPosture))
+    // console.log('Latest posture data:', JSON.stringify(latestPosture))
 
     // Return the processed data
     res.json(latestPosture)
