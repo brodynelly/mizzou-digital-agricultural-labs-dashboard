@@ -103,16 +103,10 @@ router.post('/login', loginLimiter, async (req, res) => {
       return res.status(401).json({ error: 'Account is inactive' });
     }
 
-    // Check password
-    console.log('Checking password...');
-
-    // For test users, always use direct comparison
-    // This is a temporary solution for development
-    console.log('Using direct password comparison for test users');
-    const isMatch = password === user.password;
-    console.log('Direct comparison result:', isMatch, 'Expected:', user.password, 'Actual:', password);
-
-    // In production, you would use a secure password comparison method like bcrypt
+    // Check password using hashed comparison
+    console.log('Checking password with secure hash...');
+    const isMatch = await user.comparePassword(password);
+    console.log('Password match result:', isMatch);
 
     if (!isMatch) {
       console.log('Password does not match');
