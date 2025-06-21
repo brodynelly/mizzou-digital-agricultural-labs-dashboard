@@ -5,6 +5,7 @@ const Stall = require('../models/Stall')
 const Pig = require('../models/Pig')
 const rateLimit = require('express-rate-limit')
 const Farm = require('../models/Farm')
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -13,6 +14,8 @@ const limiter = rateLimit({
 
 // Apply rate limiter to all requests
 router.use(limiter)
+// Authenticate all barn routes
+router.use(authenticateJWT)
 
 // GET all barns with farm details and stall counts
 router.get('/', async (req, res) => {
@@ -239,8 +242,8 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// CREATE barn with validation
-router.post('/', async (req, res) => {
+// CREATE barn with validation (admin only)
+router.post('/', isAdmin, async (req, res) => {
   try {
     const { name, farmId } = req.body
 
@@ -260,8 +263,8 @@ router.post('/', async (req, res) => {
   }
 })
 
-// UPDATE barn
-router.put('/:id', async (req, res) => {
+// UPDATE barn (admin only)
+router.put('/:id', isAdmin, async (req, res) => {
   try {
     const { name, farmId } = req.body
 
@@ -286,8 +289,8 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// DELETE barn with cascade option
-router.delete('/:id', async (req, res) => {
+// DELETE barn with cascade option (admin only)
+router.delete('/:id', isAdmin, async (req, res) => {
   try {
     const { cascade } = req.query
 
