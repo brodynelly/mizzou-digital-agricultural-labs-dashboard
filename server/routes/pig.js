@@ -599,31 +599,6 @@ router.get('/:id/posture/latest', async (req, res) => {
   }
 })
 
-
-// Helper function to calculate date range based on a predefined range string
-// This function is kept for future use but is currently not used
-// eslint-disable-next-line no-unused-vars
-function calculateDateRange(range) {
-  const now = new Date();
-  let startDate = new Date();
-
-  switch (range) {
-    case '30-days':
-      startDate.setDate(now.getDate() - 30);
-      break;
-    case '90-days':
-      startDate.setDate(now.getDate() - 90);
-      break;
-    case '180-days':
-      startDate.setDate(now.getDate() - 180);
-      break;
-    default: // 365-days
-      startDate.setDate(now.getDate() - 365);
-  }
-
-  return { start: startDate };
-}
-
 // Create a new pig
 router.post('/', async (req, res) => {
   try {
