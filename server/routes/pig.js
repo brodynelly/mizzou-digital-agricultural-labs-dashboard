@@ -70,24 +70,41 @@ router.get('/', async (req, res) => {
 router.get('/overview', async (req, res) => {
   try {
     const { filter } = req.query;
+    const baseMatch = { active: true };
+    const filterMatch = {};
 
-    // Set up match conditions based on filter
-    const matchConditions = { active: true };
-
-    // Add optional filtering
     if (filter === 'breeding') {
-      matchConditions.healthStatus = 'breeding';
+      filterMatch.healthStatus = 'breeding';
     } else if (filter === 'new') {
-      matchConditions.isNew = true;
+      filterMatch.isNew = true;
     } else if (filter === 'healthy') {
-      matchConditions.healthStatus = 'healthy';
+      filterMatch.healthStatus = 'healthy';
     }
-    // Add more filters as needed
 
-    const pigData = await Pig.aggregate([
+    const pipeline = [
+      { $match: baseMatch },
       {
-        $match: matchConditions
+        $lookup: {
+          from: 'pighealthstatuses',
+          let: { pigId: '$pigId' },
+          pipeline: [
+            { $match: { $expr: { $eq: ['$pigId', '$$pigId'] } } },
+            { $sort: { timestamp: -1 } },
+            { $limit: 1 },
+            { $project: { status: 1 } }
+          ],
+          as: 'latestStatus'
+        }
       },
+      { $unwind: { path: '$latestStatus', preserveNullAndEmptyArrays: true } },
+      { $addFields: { healthStatus: '$latestStatus.status' } }
+    ];
+
+    if (Object.keys(filterMatch).length) {
+      pipeline.push({ $match: filterMatch });
+    }
+
+    pipeline.push(
       {
         $lookup: {
           from: 'stalls',
@@ -136,7 +153,9 @@ router.get('/overview', async (req, res) => {
       {
         $sort: { category: 1, count: -1 }
       }
-    ]);
+    );
+
+    const pigData = await Pig.aggregate(pipeline);
 
     // Format the data for the chart
     const chartData = pigData.reduce((acc, item) => {
