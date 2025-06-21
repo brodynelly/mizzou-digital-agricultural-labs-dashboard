@@ -226,17 +226,16 @@ router.post('/', authenticateJWT, isAdmin, async (req, res) => {
 router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { name, location, description, isActive } = req.body;
-    
-    if (!name || !location) {
-      return res.status(400).json({ error: 'Name and location are required' });
+
+    const updateData = {};
+    if (name !== undefined) updateData.name = name;
+    if (location !== undefined) updateData.location = location;
+    if (description !== undefined) updateData.description = description;
+    if (isActive !== undefined) updateData.isActive = isActive;
+
+    if (Object.keys(updateData).length === 0) {
+      return res.status(400).json({ error: 'No fields provided for update' });
     }
-    
-    const updateData = { 
-      name, 
-      location,
-      description: description !== undefined ? description : '',
-      isActive: isActive !== undefined ? isActive : true
-    };
     
     const updatedFarm = await Farm.findByIdAndUpdate(
       req.params.id,
