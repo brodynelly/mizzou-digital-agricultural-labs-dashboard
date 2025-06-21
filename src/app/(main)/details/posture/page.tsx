@@ -11,19 +11,20 @@ export default function PosturePage() {
   useEffect(() => {
     const fetchData = async () => {
       try {
-        // This would need to be updated to fetch all posture data, not just for a specific pig
-        const response = await fetch('/api/pigs/posture')
+        const apiUrl = process.env.NEXT_PUBLIC_API_URL || ''
+        const response = await fetch(`${apiUrl}/api/stats`)
         if (!response.ok) {
           throw new Error(`HTTP error! status: ${response.status}`)
         }
         const data = await response.json()
-        setPostureData(data)
-        setIsLoading(false)
+        setPostureData(data.postureDistribution || [])
+        setError(null)
       } catch (error) {
         if (process.env.NODE_ENV === 'development') {
           console.error('Error fetching posture data:', error)
         }
         setError('Failed to fetch posture data. Please try again later.')
+      } finally {
         setIsLoading(false)
       }
     }
