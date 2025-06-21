@@ -7,6 +7,7 @@ const PigHealthStatus = require('../models/PigHealthStatus')
 const PigFertility = require('../models/PigFertility')
 const PigHeatStatus = require('../models/PigHeatStatus')
 const rateLimit = require('express-rate-limit')
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
 const mongoose = require('mongoose'); // Add this line at the top
 const PigPosture = require('../models/PostureData')
@@ -24,7 +25,7 @@ const VALID_RANGES = ['30-days', '90-days', '180-days', '365-days'];
 //router.use(limiter)
 
 // Get all pigs
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const pigs = await Pig.find({})
       .populate('currentLocation.farmId')
@@ -67,7 +68,7 @@ router.get('/', async (req, res) => {
   }
 })
 
-router.get('/overview', async (req, res) => {
+router.get('/overview', authenticateJWT, async (req, res) => {
   try {
     const { filter } = req.query;
 
@@ -177,7 +178,7 @@ router.get('/overview', async (req, res) => {
 
 
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -201,7 +202,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // Get pig BCS history
-router.get('/:id/bcs', async (req, res) => {
+router.get('/:id/bcs', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -233,7 +234,7 @@ router.get('/:id/bcs', async (req, res) => {
 
 
 // Get pig posture history (limited to 100 records)
-router.get('/:id/posture', async (req, res) => {
+router.get('/:id/posture', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -257,7 +258,7 @@ router.get('/:id/posture', async (req, res) => {
 })
 
 // Get aggregated posture data by day with percentages
-router.get('/:id/posture/aggregated', async (req, res) => {
+router.get('/:id/posture/aggregated', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -486,7 +487,7 @@ router.get('/:id/posture/aggregated', async (req, res) => {
 })
 
 // Get latest posture data for a pig
-router.get('/:id/posture/latest', async (req, res) => {
+router.get('/:id/posture/latest', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -604,7 +605,7 @@ function calculateDateRange(range) {
 }
 
 // Create a new pig
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { pigId, tag, breed, age, currentLocation } = req.body
 
@@ -641,7 +642,7 @@ router.post('/', async (req, res) => {
 })
 
 // Update pig
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const pigId = parseInt(req.params.id)
     if (isNaN(pigId)) {
@@ -680,7 +681,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // Delete pigs
-router.delete('/', async (req, res) => {
+router.delete('/', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { pigIds } = req.body
     const numericPigIds = pigIds.map(id => parseInt(id)).filter(id => !isNaN(id))
@@ -711,7 +712,7 @@ router.delete('/', async (req, res) => {
 })
 
 // Get latest health status for a pig
-router.get('/:id/health-status/latest', async (req, res) => {
+router.get('/:id/health-status/latest', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -743,7 +744,7 @@ router.get('/:id/health-status/latest', async (req, res) => {
 })
 
 // Get pig health status history
-router.get('/:id/health-status', async (req, res) => {
+router.get('/:id/health-status', authenticateJWT, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -772,7 +773,7 @@ router.get('/:id/health-status', async (req, res) => {
 })
 
 // Add health status record for a pig
-router.post('/:id/health-status', async (req, res) => {
+router.post('/:id/health-status', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const id = parseInt(req.params.id, 10)
     if (isNaN(id)) {
@@ -812,7 +813,7 @@ router.post('/:id/health-status', async (req, res) => {
 })
 
 // Get time-series data for pig metrics
-router.get('/analytics/time-series', async (req, res) => {
+router.get('/analytics/time-series', authenticateJWT, async (req, res) => {
   try {
     const { period = 'daily' } = req.query
 
@@ -942,7 +943,7 @@ router.get('/analytics/time-series', async (req, res) => {
 const dayjs = require('dayjs');
 
 // GET /api/pigs/:pigId/posture-summary?range=30
-router.get('/pigs/:pigId/posture-summary', async (req, res) => {
+router.get('/pigs/:pigId/posture-summary', authenticateJWT, async (req, res) => {
   try {
     const pigId = parseInt(req.params.pigId);
     let range = parseInt(req.query.range);
@@ -999,7 +1000,7 @@ router.get('/pigs/:pigId/posture-summary', async (req, res) => {
 
 
 // Get pig analytics summary
-router.get('/analytics/summary', async (_, res) => {
+router.get('/analytics/summary', authenticateJWT, async (_, res) => {
   try {
     const pigs = await Pig.find({})
       .populate('healthStatus')
