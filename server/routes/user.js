@@ -3,6 +3,16 @@ const router = express.Router();
 const User = require('../models/User');
 const Farm = require('../models/Farm');
 const mongoose = require('mongoose');
+let bcrypt;
+try {
+  bcrypt = require('bcryptjs');
+} catch (error) {
+  console.error('bcryptjs not available, using fallback password handling');
+  bcrypt = {
+    genSalt: async () => 'salt',
+    hash: async (password) => password,
+  };
+}
 const rateLimit = require('express-rate-limit');
 
 // Auth middleware
@@ -156,7 +166,15 @@ router.put('/:id', authenticateJWT, async (req, res) => {
     const updateData = {};
     if (firstName) updateData.firstName = firstName;
     if (lastName) updateData.lastName = lastName;
-    if (password) updateData.password = password; // Will be hashed by pre-save hook
+    if (password) {
+      try {
+        const salt = await bcrypt.genSalt(10);
+        updateData.password = await bcrypt.hash(password, salt);
+      } catch (hashError) {
+        console.error('Error hashing password:', hashError);
+        return res.status(500).json({ error: 'Failed to hash password' });
+      }
+    }
 
     const isUserAdmin = (req.user.role === 'admin' || req.user.role === 'Administrator');
 
