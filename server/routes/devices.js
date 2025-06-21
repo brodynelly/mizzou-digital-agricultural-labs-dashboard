@@ -213,16 +213,7 @@ router.get('/:id/temperature', async (req, res) => {
   }
 })
 
-// Get associated pig for device
-router.get('/:id/pig', async (req, res) => {
-  try {
-    const pig = await Pig.findOne({ deviceId: parseInt(req.params.id) })
-    res.json({ pigId: pig?.pigId || null })
-  } catch (error) {
-    console.error('Error fetching associated pig:', error)
-    res.status(500).json({ error: 'Failed to fetch associated pig' })
-  }
-})
+// Route removed: devices are not directly linked to pigs
 
 // Create new device
 router.post('/', async (req, res) => {
