@@ -161,27 +161,6 @@ router.get('/capacity', async (req, res) => {
     });
   }
 });
-// Reuse the same calculateDateRange function from farms.js
-function calculateDateRange(range) {
-  const now = new Date();
-  let startDate = new Date();
-  
-  switch(range) {
-      case '30-days':
-          startDate.setDate(now.getDate() - 30);
-          break;
-      case '90-days':
-          startDate.setDate(now.getDate() - 90);
-          break;
-      case '180-days':
-          startDate.setDate(now.getDate() - 180);
-          break;
-      default: // 365-days
-          startDate.setDate(now.getDate() - 365);
-  }
-  
-  return { start: startDate };
-}
 
 // GET barns by farm ID
 router.get('/farm/:id', async (req, res) => {
