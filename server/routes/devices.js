@@ -143,6 +143,7 @@ const express = require('express')
 const router = express.Router()
 const Device = require('../models/Device')
 const rateLimit = require('express-rate-limit')
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
 // Set up rate limiter: maximum of 100 requests per 15 minutes
 const limiter = rateLimit({
@@ -156,7 +157,7 @@ const TemperatureData = require('../models/TemperatureData')
 const Pig = require('../models/Pig')
 
 // Get all devices
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const devices = await Device.find({}).sort({ lastUpdate: -1 })
     
@@ -184,7 +185,7 @@ router.get('/', async (req, res) => {
 })
 
 // Get single device
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const device = await Device.findOne({ deviceId: parseInt(req.params.id) })
     if (!device) {
@@ -198,7 +199,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // Get device temperature history
-router.get('/:id/temperature', async (req, res) => {
+router.get('/:id/temperature', authenticateJWT, async (req, res) => {
   try {
     const temperatureData = await TemperatureData.find({ 
       deviceId: parseInt(req.params.id) 
@@ -214,7 +215,7 @@ router.get('/:id/temperature', async (req, res) => {
 })
 
 // Get associated pig for device
-router.get('/:id/pig', async (req, res) => {
+router.get('/:id/pig', authenticateJWT, async (req, res) => {
   try {
     const pig = await Pig.findOne({ deviceId: parseInt(req.params.id) })
     res.json({ pigId: pig?.pigId || null })
@@ -225,7 +226,7 @@ router.get('/:id/pig', async (req, res) => {
 })
 
 // Create new device
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const lastDevice = await Device.findOne().sort({ deviceId: -1 })
     const newDeviceId = (lastDevice?.deviceId || 0) + 1
@@ -248,7 +249,7 @@ router.post('/', async (req, res) => {
 })
 
 // Update device
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const deviceId = parseInt(req.params.id)
     
@@ -283,7 +284,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // Delete device
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const deviceId = parseInt(req.params.id)
     const result = await Device.findOneAndDelete({ deviceId })
@@ -303,7 +304,7 @@ router.delete('/:id', async (req, res) => {
 })
 
 // ADDITIONAL: Device analytics
-router.get('/analytics/summary', async (req, res) => {
+router.get('/analytics/summary', authenticateJWT, async (req, res) => {
   try {
     const devices = await Device.find({})
     const total = devices.length
