@@ -146,28 +146,6 @@ router.get('/health', authenticateJWT, async (req, res) => {
   }
 });
 
-// Reuse the same calculateDateRange function
-function calculateDateRange(range) {
-  const now = new Date();
-  let startDate = new Date();
-  
-  switch(range) {
-      case '30-days':
-          startDate.setDate(now.getDate() - 30);
-          break;
-      case '90-days':
-          startDate.setDate(now.getDate() - 90);
-          break;
-      case '180-days':
-          startDate.setDate(now.getDate() - 180);
-          break;
-      default: // 365-days
-          startDate.setDate(now.getDate() - 365);
-  }
-  
-  return { start: startDate };
-}
-
 
 // GET single stall with detailed info
 router.get('/:id', authenticateJWT, async (req, res) => {
