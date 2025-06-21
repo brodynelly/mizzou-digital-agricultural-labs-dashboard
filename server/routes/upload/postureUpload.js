@@ -85,8 +85,12 @@ router.post('/:pig_id', limiter, upload.single('file'), async (req, res) => {
           }
         }
 
-        // Clean up the uploaded file
-        fs.unlinkSync(filePath);
+        // Clean up the uploaded file asynchronously to avoid blocking
+        try {
+          await fs.promises.unlink(filePath);
+        } catch (err) {
+          console.error('Error deleting uploaded file:', err);
+        }
 
         res.status(200).json({ message: 'Posture data uploaded successfully' });
       })
