@@ -942,7 +942,7 @@ router.get('/analytics/time-series', async (req, res) => {
 const dayjs = require('dayjs');
 
 // GET /api/pigs/:pigId/posture-summary?range=30
-router.get('/pigs/:pigId/posture-summary', async (req, res) => {
+router.get('/:pigId/posture-summary', async (req, res) => {
   try {
     const pigId = parseInt(req.params.pigId);
     let range = parseInt(req.query.range);
