@@ -4,6 +4,7 @@ const Stall = require('../models/Stall')
 const Barn = require('../models/Barn')
 const Pig = require('../models/Pig')
 const rateLimit = require('express-rate-limit')
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -14,7 +15,7 @@ const limiter = rateLimit({
 router.use(limiter)
 
 // GET all stalls with barn and farm details
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const stalls = await Stall.find({})
       .populate({
@@ -48,7 +49,7 @@ router.get('/', async (req, res) => {
 })
 
 // GET stalls by barn ID
-router.get('/barn/:barnId', async (req, res) => {
+router.get('/barn/:barnId', authenticateJWT, async (req, res) => {
   try {
     const stalls = await Stall.find({ barnId: req.params.barnId })
       .populate({
@@ -63,7 +64,7 @@ router.get('/barn/:barnId', async (req, res) => {
     res.status(500).json({ error: 'Failed to fetch stalls' })
   }
 })
-router.get('/health', async (req, res) => {
+router.get('/health', authenticateJWT, async (req, res) => {
   try {
       const { filter } = req.query;
       
@@ -169,7 +170,7 @@ function calculateDateRange(range) {
 
 
 // GET single stall with detailed info
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
     const stall = await Stall.findById(req.params.id)
       .populate({
@@ -205,7 +206,7 @@ router.get('/:id', async (req, res) => {
 })
 
 // CREATE stall with validation
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { name, barnId, farmId } = req.body
 
@@ -227,7 +228,7 @@ router.post('/', async (req, res) => {
 })
 
 // UPDATE stall
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { name, barnId, farmId } = req.body
 
@@ -253,7 +254,7 @@ router.put('/:id', async (req, res) => {
 })
 
 // DELETE stall with pig reassignment
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const stall = await Stall.findById(req.params.id)
     if (!stall) {
@@ -275,7 +276,7 @@ router.delete('/:id', async (req, res) => {
 })
 
 // GET stall analytics with pig health data
-router.get('/:id/analytics', async (req, res) => {
+router.get('/:id/analytics', authenticateJWT, async (req, res) => {
   try {
     const stall = await Stall.findById(req.params.id)
       .populate({
