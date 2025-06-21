@@ -296,16 +296,19 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Barn not found' })
     }
 
-    if (cascade === 'true') {
-      // Cascade delete - remove associated stalls and update pigs
-      await Promise.all([
-        Stall.deleteMany({ barnId: barn._id }),
-        Pig.updateMany(
-          { 'currentLocation.barnId': barn._id },
-          { $set: { 'currentLocation.barnId': null } }
-        )
-      ])
+    // If cascade query is provided but not explicitly true, refuse deletion
+    if (cascade && cascade !== 'true') {
+      return res.status(400).json({ error: 'Cascade must be true to delete a barn' })
     }
+
+    // Always clean up associated data so no references remain
+    await Promise.all([
+      Stall.deleteMany({ barnId: barn._id }),
+      Pig.updateMany(
+        { 'currentLocation.barnId': barn._id },
+        { $set: { 'currentLocation.barnId': null, 'currentLocation.stallId': null } }
+      )
+    ])
 
     await barn.deleteOne()
     res.json({ message: 'Barn deleted successfully' })
