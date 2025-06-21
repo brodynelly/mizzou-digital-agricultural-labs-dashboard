@@ -83,7 +83,7 @@ router.get('/', async (req, res) => {
 
     // Calculate posture stats
     const postureCounts = postureData.reduce((acc, curr) => {
-      acc[curr.posture] = (acc[curr.posture] || 0) + 1;
+      acc[curr.score] = (acc[curr.score] || 0) + 1;
       return acc;
     }, {});
 
