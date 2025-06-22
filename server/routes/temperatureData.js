@@ -121,8 +121,19 @@ router.delete('/:recordId', authenticateJWT, async (req, res) => {
 // ADDITIONAL: Temperature analytics
 router.get('/analytics/summary', authenticateJWT, async (req, res) => {
   try {
-    const records = await TemperatureData.find({})
-    if (!records || records.length === 0) {
+    const results = await TemperatureData.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRecords: { $sum: 1 },
+          avgTemperature: { $avg: '$temperature' },
+          minTemperature: { $min: '$temperature' },
+          maxTemperature: { $max: '$temperature' }
+        }
+      }
+    ])
+
+    if (!results || results.length === 0) {
       return res.json({
         totalRecords: 0,
         avgTemperature: 0,
@@ -131,18 +142,12 @@ router.get('/analytics/summary', authenticateJWT, async (req, res) => {
       })
     }
 
-    const totalRecords = records.length
-    let sumTemp = 0
-    let minTemp = records[0].temperature
-    let maxTemp = records[0].temperature
-
-    records.forEach(r => {
-      sumTemp += r.temperature
-      if (r.temperature < minTemp) minTemp = r.temperature
-      if (r.temperature > maxTemp) maxTemp = r.temperature
-    })
-
-    const avgTemperature = sumTemp / totalRecords
+    const {
+      totalRecords,
+      avgTemperature,
+      minTemperature,
+      maxTemperature
+    } = results[0]
 
     res.json({
       totalRecords,
