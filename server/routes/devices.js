@@ -47,7 +47,12 @@ router.get('/', authenticateJWT, async (req, res) => {
 // Get single device
 router.get('/:id', authenticateJWT, async (req, res) => {
   try {
-    const device = await Device.findOne({ deviceId: parseInt(req.params.id) })
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
+    const device = await Device.findOne({ deviceId })
     if (!device) {
       return res.status(404).json({ error: 'Device not found' })
     }
@@ -61,9 +66,12 @@ router.get('/:id', authenticateJWT, async (req, res) => {
 // Get device temperature history
 router.get('/:id/temperature', authenticateJWT, async (req, res) => {
   try {
-    const temperatureData = await TemperatureData.find({ 
-      deviceId: parseInt(req.params.id) 
-    })
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
+    const temperatureData = await TemperatureData.find({ deviceId })
       .sort({ timestamp: -1 })
       .limit(100)
 
@@ -77,7 +85,12 @@ router.get('/:id/temperature', authenticateJWT, async (req, res) => {
 // Get associated pig for device
 router.get('/:id/pig', authenticateJWT, async (req, res) => {
   try {
-    const pig = await Pig.findOne({ deviceId: parseInt(req.params.id) })
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
+    const pig = await Pig.findOne({ deviceId })
     res.json({ pigId: pig?.pigId || null })
   } catch (error) {
     console.error('Error fetching associated pig:', error)
@@ -111,8 +124,11 @@ router.post('/', authenticateJWT, isAdmin, async (req, res) => {
 // Update device
 router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    const deviceId = parseInt(req.params.id)
-    
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
     // Validate req.body values
     const { deviceName, deviceType, status } = req.body;
     if (typeof deviceName !== 'string' || typeof deviceType !== 'string' || typeof status !== 'string') {
@@ -146,7 +162,10 @@ router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
 // Delete device
 router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    const deviceId = parseInt(req.params.id)
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
     const result = await Device.findOneAndDelete({ deviceId })
     
     if (!result) {
