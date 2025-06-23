@@ -1,6 +1,5 @@
 "use client"
 
-
 import { Label } from "@/components/Label"
 
 import {
@@ -46,10 +45,9 @@ const periods: Period[] = [
 ]
 
 export const getPeriod = (
-  dateRange: DateRange | undefined,
+  dateRange: DateRange,
   value: PeriodValue,
 ): DateRange | undefined => {
-  if (!dateRange) return undefined
   const from = dateRange.from
   const to = dateRange.to
   switch (value) {
@@ -81,8 +79,8 @@ export const getPeriod = (
 type FilterbarProps = {
   maxDate?: Date
   minDate?: Date
-  selectedDates: DateRange | undefined
-  onDatesChange: (dates: DateRange | undefined) => void
+  selectedDates: DateRange
+  onDatesChange: (dates: DateRange) => void
   selectedPeriod: PeriodValue
   onPeriodChange: (period: PeriodValue) => void
   categories: any[]
@@ -126,7 +124,6 @@ export function Filterbar({
           fromDate={minDate}
           align="start"
         />
-
       </div>
       <Dialog>
         <DialogTrigger asChild>

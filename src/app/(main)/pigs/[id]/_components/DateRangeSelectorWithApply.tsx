@@ -2,11 +2,7 @@
 
 import { Button } from "@/components/Button"
 import { Calendar } from "@/components/Calendar"
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/Popover"
+import { Popover, PopoverContent, PopoverTrigger } from "@/components/Popover"
 import { cn } from "@/lib/utils"
 import { format } from "date-fns"
 import { Calendar as CalendarIcon } from "lucide-react"
@@ -19,8 +15,8 @@ import { usePostureData } from "./PostureDataProvider"
 declare global {
   interface Window {
     pigPostureDateRange?: {
-      minDate: string;
-      maxDate: string;
+      minDate: string
+      maxDate: string
     }
   }
 }
@@ -35,8 +31,8 @@ export function DateRangeSelectorWithApply() {
 
   // State for available date range
   const [availableDateRange, setAvailableDateRange] = useState({
-    minDate: dateRange.minDate || new Date('2022-07-22'), // Default min date
-    maxDate: dateRange.maxDate || new Date('2022-08-25')  // Default max date
+    minDate: dateRange.minDate || new Date("2022-07-22"), // Default min date
+    maxDate: dateRange.maxDate || new Date("2022-08-25"), // Default max date
   })
 
   // Initialize date range from URL params or default to available range
@@ -47,14 +43,14 @@ export function DateRangeSelectorWithApply() {
     if (startParam && endParam) {
       return {
         from: new Date(startParam),
-        to: new Date(endParam)
+        to: new Date(endParam),
       }
     }
 
     // Default to the available date range
     return {
       from: availableDateRange.minDate,
-      to: availableDateRange.maxDate
+      to: availableDateRange.maxDate,
     }
   })
 
@@ -70,13 +66,19 @@ export function DateRangeSelectorWithApply() {
       // Set the available date range
       setAvailableDateRange({
         minDate: dateRange.minDate,
-        maxDate: dateRange.maxDate
+        maxDate: dateRange.maxDate,
       })
 
       // Update the date range if it's outside the available range
       if (date?.from && date?.to) {
-        const newFrom = dateRange.minDate && date.from < dateRange.minDate ? dateRange.minDate : date.from
-        const newTo = dateRange.maxDate && date.to > dateRange.maxDate ? dateRange.maxDate : date.to
+        const newFrom =
+          dateRange.minDate && date.from < dateRange.minDate
+            ? dateRange.minDate
+            : date.from
+        const newTo =
+          dateRange.maxDate && date.to > dateRange.maxDate
+            ? dateRange.maxDate
+            : date.to
 
         if (newFrom !== date.from || newTo !== date.to) {
           setDate({ from: newFrom, to: newTo })
@@ -84,7 +86,7 @@ export function DateRangeSelectorWithApply() {
         }
       }
     }
-  }, [dateRange])
+  }, [date?.from, date?.to, dateRange])
 
   // Handle apply button click
   const handleApply = () => {
@@ -111,7 +113,7 @@ export function DateRangeSelectorWithApply() {
             variant="secondary"
             className={cn(
               "w-[300px] justify-start text-left font-normal",
-              !date && "text-muted-foreground"
+              !date && "text-muted-foreground",
             )}
           >
             <CalendarIcon className="mr-2 h-4 w-4" />
@@ -142,8 +144,10 @@ export function DateRangeSelectorWithApply() {
                   const { minDate, maxDate } = availableDateRange
 
                   // Adjust dates if they're outside the available range
-                  const adjustedFrom = minDate && newDate.from < minDate ? minDate : newDate.from
-                  const adjustedTo = maxDate && newDate.to > maxDate ? maxDate : newDate.to
+                  const adjustedFrom =
+                    minDate && newDate.from < minDate ? minDate : newDate.from
+                  const adjustedTo =
+                    maxDate && newDate.to > maxDate ? maxDate : newDate.to
 
                   setTempDate({ from: adjustedFrom, to: adjustedTo })
                 } else {
@@ -153,13 +157,14 @@ export function DateRangeSelectorWithApply() {
               numberOfMonths={2}
               disabled={{
                 before: availableDateRange.minDate,
-                after: availableDateRange.maxDate
+                after: availableDateRange.maxDate,
               }}
             />
             <div className="p-2 text-center text-sm text-gray-500">
-              Available data: {availableDateRange.minDate?.toLocaleDateString()} - {availableDateRange.maxDate?.toLocaleDateString()}
+              Available data: {availableDateRange.minDate?.toLocaleDateString()}{" "}
+              - {availableDateRange.maxDate?.toLocaleDateString()}
             </div>
-            <div className="flex justify-end gap-2 p-2 border-t border-gray-200">
+            <div className="flex justify-end gap-2 border-t border-gray-200 p-2">
               <Button
                 variant="secondary"
                 onClick={() => {
@@ -169,7 +174,9 @@ export function DateRangeSelectorWithApply() {
               >
                 Cancel
               </Button>
-              <Button variant="primary" onClick={handleApply}>Apply</Button>
+              <Button variant="primary" onClick={handleApply}>
+                Apply
+              </Button>
             </div>
           </div>
         </PopoverContent>

@@ -5,6 +5,7 @@ const csv = require('csv-parser');
 const fs = require('fs');
 const path = require('path');
 const RateLimit = require('express-rate-limit');  // Import the rate limit package
+const { authenticateJWT } = require('../../middleware/authMiddleware');
 const Pig = require('../../models/Pig');
 const PigPosture = require('../../models/PostureData');
 
@@ -21,8 +22,8 @@ const limiter = RateLimit({
   message: 'Too many requests from this IP, please try again after 15 minutes',
 });
 
-// Apply the rate limiter to the specific route
-router.post('/:pig_id', limiter, upload.single('file'), async (req, res) => {
+// Apply the rate limiter and authentication middleware to the upload route
+router.post('/:pig_id', limiter, authenticateJWT, upload.single('file'), async (req, res) => {
   const { pig_id } = req.params;
 
   // Validate the pig_id
@@ -74,7 +75,7 @@ router.post('/:pig_id', limiter, upload.single('file'), async (req, res) => {
 
             // Save the posture data
             const postureData = new PigPosture({
-              pigId: pig._id,
+              pigId: pig.pigId,
               timestamp: isoTimestamp,
               score: Posture,
             });
@@ -85,8 +86,12 @@ router.post('/:pig_id', limiter, upload.single('file'), async (req, res) => {
           }
         }
 
-        // Clean up the uploaded file
-        fs.unlinkSync(filePath);
+        // Clean up the uploaded file asynchronously to avoid blocking
+        try {
+          await fs.promises.unlink(filePath);
+        } catch (err) {
+          console.error('Error deleting uploaded file:', err);
+        }
 
         res.status(200).json({ message: 'Posture data uploaded successfully' });
       })

@@ -5,6 +5,7 @@ const Stall = require('../models/Stall')
 const Pig = require('../models/Pig')
 const rateLimit = require('express-rate-limit')
 const Farm = require('../models/Farm')
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
 const limiter = rateLimit({
   windowMs: 15 * 60 * 1000,
@@ -13,6 +14,8 @@ const limiter = rateLimit({
 
 // Apply rate limiter to all requests
 router.use(limiter)
+// Authenticate all barn routes
+router.use(authenticateJWT)
 
 // GET all barns with farm details and stall counts
 router.get('/', async (req, res) => {
@@ -158,27 +161,6 @@ router.get('/capacity', async (req, res) => {
     });
   }
 });
-// Reuse the same calculateDateRange function from farms.js
-function calculateDateRange(range) {
-  const now = new Date();
-  let startDate = new Date();
-  
-  switch(range) {
-      case '30-days':
-          startDate.setDate(now.getDate() - 30);
-          break;
-      case '90-days':
-          startDate.setDate(now.getDate() - 90);
-          break;
-      case '180-days':
-          startDate.setDate(now.getDate() - 180);
-          break;
-      default: // 365-days
-          startDate.setDate(now.getDate() - 365);
-  }
-  
-  return { start: startDate };
-}
 
 // GET barns by farm ID
 router.get('/farm/:id', async (req, res) => {
@@ -239,8 +221,8 @@ router.get('/:id', async (req, res) => {
   }
 })
 
-// CREATE barn with validation
-router.post('/', async (req, res) => {
+// CREATE barn with validation (admin only)
+router.post('/', isAdmin, async (req, res) => {
   try {
     const { name, farmId } = req.body
 
@@ -260,8 +242,8 @@ router.post('/', async (req, res) => {
   }
 })
 
-// UPDATE barn
-router.put('/:id', async (req, res) => {
+// UPDATE barn (admin only)
+router.put('/:id', isAdmin, async (req, res) => {
   try {
     const { name, farmId } = req.body
 
@@ -286,8 +268,8 @@ router.put('/:id', async (req, res) => {
   }
 })
 
-// DELETE barn with cascade option
-router.delete('/:id', async (req, res) => {
+// DELETE barn with cascade option (admin only)
+router.delete('/:id', isAdmin, async (req, res) => {
   try {
     const { cascade } = req.query
 
@@ -296,16 +278,19 @@ router.delete('/:id', async (req, res) => {
       return res.status(404).json({ error: 'Barn not found' })
     }
 
-    if (cascade === 'true') {
-      // Cascade delete - remove associated stalls and update pigs
-      await Promise.all([
-        Stall.deleteMany({ barnId: barn._id }),
-        Pig.updateMany(
-          { 'currentLocation.barnId': barn._id },
-          { $set: { 'currentLocation.barnId': null } }
-        )
-      ])
+    // If cascade query is provided but not explicitly true, refuse deletion
+    if (cascade && cascade !== 'true') {
+      return res.status(400).json({ error: 'Cascade must be true to delete a barn' })
     }
+
+    // Always clean up associated data so no references remain
+    await Promise.all([
+      Stall.deleteMany({ barnId: barn._id }),
+      Pig.updateMany(
+        { 'currentLocation.barnId': barn._id },
+        { $set: { 'currentLocation.barnId': null, 'currentLocation.stallId': null } }
+      )
+    ])
 
     await barn.deleteOne()
     res.json({ message: 'Barn deleted successfully' })

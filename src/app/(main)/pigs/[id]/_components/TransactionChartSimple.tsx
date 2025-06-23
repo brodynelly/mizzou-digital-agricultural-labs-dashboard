@@ -53,30 +53,30 @@ export function TransactionChart({
   const [error, setError] = useState<string | null>(null)
 
   // Use a ref to track if we've already fetched the data
-  const dataFetchedRef = useRef(false);
+  const dataFetchedRef = useRef(false)
 
   // Reset the dataFetchedRef when the date range changes
   useEffect(() => {
-    console.log("Date range changed in URL:", { startParam, endParam });
+    console.log("Date range changed in URL:", { startParam, endParam })
     // Always reset the dataFetchedRef when the date range changes
-    dataFetchedRef.current = false;
+    dataFetchedRef.current = false
     // Clear existing data to show loading state
-    setPostureData(null);
-    setIsLoading(true);
-    setError(null);
+    setPostureData(null)
+    setIsLoading(true)
+    setError(null)
 
     // Log the current URL for debugging
-    console.log("Current URL:", window.location.href);
-  }, [startParam, endParam]);
+    console.log("Current URL:", window.location.href)
+  }, [startParam, endParam])
 
   // Fetch posture data
   useEffect(() => {
     // Skip fetching if we've already fetched data and nothing has changed
     if (dataFetchedRef.current && postureData && postureData.length > 0) {
-      return;
+      return
     }
 
-    console.log("Fetching new data due to date range change or initial load");
+    console.log("Fetching new data due to date range change or initial load")
 
     const fetchPostureData = async () => {
       try {
@@ -87,25 +87,25 @@ export function TransactionChart({
         const params = new URLSearchParams()
 
         if (startParam) {
-          params.append('start', startParam)
+          params.append("start", startParam)
           console.log(`Adding start date parameter: ${startParam}`)
         }
 
         if (endParam) {
-          params.append('end', endParam)
+          params.append("end", endParam)
           console.log(`Adding end date parameter: ${endParam}`)
         }
 
         const queryString = params.toString()
         // Use the direct endpoint for the aggregated posture data
-        const url = `http://localhost:8080/api/pigs/${pigId}/posture/aggregated${queryString ? `?${queryString}` : ''}`
-        console.log('Fetching posture data with URL:', url)
+        const url = `http://localhost:8080/api/pigs/${pigId}/posture/aggregated${queryString ? `?${queryString}` : ""}`
+        console.log("Fetching posture data with URL:", url)
 
         // Log the date range for debugging
         if (startParam && endParam) {
-          console.log(`Date range: ${startParam} to ${endParam}`);
+          console.log(`Date range: ${startParam} to ${endParam}`)
         } else {
-          console.log('No date range specified, fetching all data');
+          console.log("No date range specified, fetching all data")
         }
 
         const response = await fetch(url)
@@ -115,7 +115,7 @@ export function TransactionChart({
         const data = await response.json()
 
         // Extract the data and date range from the response
-        let filteredData = Array.isArray(data) ? data : (data.data || [])
+        let filteredData = Array.isArray(data) ? data : data.data || []
 
         // Store the available date range
         if (data.dateRange) {
@@ -125,13 +125,15 @@ export function TransactionChart({
 
         // Check if we have any data
         if (filteredData.length === 0) {
-          console.log('No posture data available for this pig')
-          setError('No posture data available for this pig in the specified date range')
+          console.log("No posture data available for this pig")
+          setError(
+            "No posture data available for this pig in the specified date range",
+          )
         } else {
           setPostureData(filteredData)
         }
 
-        dataFetchedRef.current = true;
+        dataFetchedRef.current = true
       } catch (error) {
         console.error(`Error fetching posture data:`, error)
         setError(`Failed to fetch posture data`)
@@ -143,7 +145,7 @@ export function TransactionChart({
     if (pigId) {
       fetchPostureData()
     }
-  }, [pigId, startParam, endParam])
+  }, [pigId, startParam, endParam, postureData])
 
   const chartConfigs: Record<ChartType, ChartConfig> = {
     amount: {
@@ -177,7 +179,9 @@ export function TransactionChart({
     }
 
     // Log the data we're processing
-    console.log(`Processing ${postureData.length} data points for chart display`);
+    console.log(
+      `Processing ${postureData.length} data points for chart display`,
+    )
 
     if (type === "amount") {
       // Process the aggregated data for the chart
@@ -202,15 +206,16 @@ export function TransactionChart({
       })
 
       // Sort by date
-      processedData.sort((a: any, b: any) =>
-        new Date(a.date).getTime() - new Date(b.date).getTime()
+      processedData.sort(
+        (a: any, b: any) =>
+          new Date(a.date).getTime() - new Date(b.date).getTime(),
       )
 
       return processedData
     } else if (type === "category") {
       // For category chart, aggregate all data
       const categories = ["Standing", "Lying", "Sitting", "Moving", "Other"]
-      const counts = { "Standing": 0, "Lying": 0, "Sitting": 0, "Moving": 0, "Other": 0 }
+      const counts = { Standing: 0, Lying: 0, Sitting: 0, Moving: 0, Other: 0 }
 
       // Sum up all counts across all days
       postureData.forEach((dayData: any) => {
@@ -221,9 +226,9 @@ export function TransactionChart({
         counts["Other"] += dayData.counts[5] || 0
       })
 
-      const categoryData: ChartDataItem[] = categories.map(category => ({
+      const categoryData: ChartDataItem[] = categories.map((category) => ({
         key: category,
-        value: counts[category as keyof typeof counts]
+        value: counts[category as keyof typeof counts],
       })) as ChartDataItem[]
 
       return categoryData
@@ -240,13 +245,13 @@ export function TransactionChart({
     "2": "Lying",
     "3": "Sitting",
     "4": "Moving",
-    "5": "Other"
+    "5": "Other",
   }
 
   // Determine categories based on chart type
   const categories = useMemo(() => {
     if (type === "amount") {
-      return ["1", "2", "3", "4", "5"]
+      return ["1", "2", "3", "4", "5"] // Keep numerical keys for data processing
     } else {
       return ["value"]
     }
@@ -273,7 +278,7 @@ export function TransactionChart({
 
   return (
     <div className={cx(className, "w-full")}>
-      <div className="flex items-center justify-between mb-4">
+      <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <h2
             id={`${type}-chart-title`}
@@ -292,6 +297,37 @@ export function TransactionChart({
         )}
       </div>
 
+      {/* Posture Legend for amount charts */}
+      {type === "amount" && (
+        <div className="mb-4 mt-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+          <h3 className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+            Posture Score Legend:
+          </h3>
+          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 sm:grid-cols-5">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-emerald-500"></div>
+              <span>1 - Standing</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-amber-500"></div>
+              <span>2 - Lying</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-blue-500"></div>
+              <span>3 - Sitting</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-violet-500"></div>
+              <span>4 - Moving</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-pink-500"></div>
+              <span>5 - Other</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -305,7 +341,7 @@ export function TransactionChart({
           data={chartData}
           index={type === "amount" ? "date" : "key"}
           categories={categories}
-          showLegend={type === "amount"}
+          showLegend={false}
           colors={colors as AvailableChartColorsKeys[]}
           yAxisWidth={yAxisWidth}
           valueFormatter={config.valueFormatter}
@@ -315,29 +351,39 @@ export function TransactionChart({
           layout={config.layout}
           barCategoryGap="6%"
           aria-labelledby={`${type}-chart-title`}
+          // xAxisLabel={type === "amount" ? "Date" : "Posture Category"}
+          // yAxisLabel={type === "amount" ? (showPercentage ? "Percentage (%)" : "Count") : "Count"}
           customTooltip={(props) => {
-            if (!props.active || !props.payload?.length) return null;
+            if (!props.active || !props.payload?.length) return null
 
             return (
               <div className="rounded-lg border border-gray-200 bg-white p-3 shadow-md dark:border-gray-800 dark:bg-gray-900">
                 <p className="mb-2 font-medium">{props.label}</p>
                 {props.payload.map((entry: any, index) => {
-                  const categoryKey = entry.dataKey as string;
-                  const categoryLabel = type === "amount" ?
-                    (postureCategoryLabels as any)[categoryKey] || categoryKey :
-                    categoryKey;
+                  const categoryKey = entry.dataKey as string
+                  const categoryLabel =
+                    type === "amount"
+                      ? (postureCategoryLabels as any)[categoryKey] ||
+                      categoryKey
+                      : categoryKey
                   return (
                     <div key={index} className="flex items-center gap-2">
                       <div
                         className="h-3 w-3 rounded-sm"
                         style={{ backgroundColor: entry.color }}
                       />
-                      <span className="text-sm">{categoryLabel}: {typeof entry.value === 'number' ? entry.value.toFixed(2) : entry.value}{showPercentage ? '%' : ''}</span>
+                      <span className="text-sm">
+                        {categoryLabel}:{" "}
+                        {typeof entry.value === "number"
+                          ? entry.value.toFixed(2)
+                          : entry.value}
+                        {showPercentage ? "%" : ""}
+                      </span>
                     </div>
-                  );
+                  )
                 })}
               </div>
-            );
+            )
           }}
         />
       )}

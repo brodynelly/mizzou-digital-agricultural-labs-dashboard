@@ -1,148 +1,9 @@
-// const express = require('express')
-// const router = express.Router()
-// const Device = require('../models/Device')
-// const TemperatureData = require('../models/TemperatureData')
-// const Pig = require('../models/Pig')
-
-// // Get all devices
-// router.get('/', async (req, res) => {
-//   try {
-//     const devices = await Device.find({}).sort({ lastUpdate: -1 })
-    
-//     const transformedDevices = devices.map(device => ({
-//       id: device.deviceId,
-//       created: device.insertionTime || new Date().toISOString(),
-//       deviceName: device.deviceName,
-//       type: device.deviceType,
-//       status: device.status,
-//       priority: device.status === 'online' ? 'low' : device.status === 'warning' ? 'medium' : 'high',
-//       lastDataPoint: device.lastUpdate ? new Date(device.lastUpdate).toISOString() : new Date().toISOString()
-//     }))
-
-//     res.json(transformedDevices)
-//   } catch (error) {
-//     console.error('Error fetching devices:', error)
-//     res.status(500).json({ error: 'Failed to fetch devices' })
-//   }
-// })
-
-// // Get single device
-// router.get('/:id', async (req, res) => {
-//   try {
-//     const device = await Device.findOne({ deviceId: parseInt(req.params.id) })
-//     if (!device) {
-//       return res.status(404).json({ error: 'Device not found' })
-//     }
-//     res.json(device)
-//   } catch (error) {
-//     console.error('Error fetching device:', error)
-//     res.status(500).json({ error: 'Failed to fetch device' })
-//   }
-// })
-
-// // Get device temperature history
-// router.get('/:id/temperature', async (req, res) => {
-//   try {
-//     const temperatureData = await TemperatureData.find({ 
-//       deviceId: parseInt(req.params.id) 
-//     }).sort({ timestamp: -1 }).limit(100)
-
-//     res.json(temperatureData)
-//   } catch (error) {
-//     console.error('Error fetching temperature data:', error)
-//     res.status(500).json({ error: 'Failed to fetch temperature data' })
-//   }
-// })
-
-// // Get associated pig for device
-// router.get('/:id/pig', async (req, res) => {
-//   try {
-//     const pig = await Pig.findOne({ deviceId: parseInt(req.params.id) })
-//     res.json({ pigId: pig?.pigId || null })
-//   } catch (error) {
-//     console.error('Error fetching associated pig:', error)
-//     res.status(500).json({ error: 'Failed to fetch associated pig' })
-//   }
-// })
-
-// // Create new device
-// router.post('/', async (req, res) => {
-//   try {
-//     const lastDevice = await Device.findOne().sort({ deviceId: -1 })
-//     const newDeviceId = (lastDevice?.deviceId || 0) + 1
-
-//     const newDevice = await Device.create({
-//       deviceId: newDeviceId,
-//       deviceName: req.body.deviceName,
-//       deviceType: req.body.deviceType,
-//       status: req.body.status,
-//       temperature: 25.0, // Default temperature
-//       insertionTime: new Date(),
-//       lastUpdate: new Date()
-//     })
-
-//     res.status(201).json(newDevice)
-//   } catch (error) {
-//     console.error('Error creating device:', error)
-//     res.status(500).json({ error: 'Failed to create device' })
-//   }
-// })
-
-// // Update device
-// router.put('/:id', async (req, res) => {
-//   try {
-//     const deviceId = parseInt(req.params.id)
-//     const updates = {
-//       deviceName: req.body.deviceName,
-//       deviceType: req.body.deviceType,
-//       status: req.body.status,
-//       lastUpdate: new Date()
-//     }
-    
-//     const updatedDevice = await Device.findOneAndUpdate(
-//       { deviceId },
-//       updates,
-//       { new: true }
-//     )
-
-//     if (!updatedDevice) {
-//       return res.status(404).json({ error: 'Device not found' })
-//     }
-
-//     res.json(updatedDevice)
-//   } catch (error) {
-//     console.error('Error updating device:', error)
-//     res.status(500).json({ error: 'Failed to update device' })
-//   }
-// })
-
-// // Delete device
-// router.delete('/:id', async (req, res) => {
-//   try {
-//     const deviceId = parseInt(req.params.id)
-//     const result = await Device.findOneAndDelete({ deviceId })
-    
-//     if (!result) {
-//       return res.status(404).json({ error: 'Device not found' })
-//     }
-
-//     // Delete associated temperature data
-//     await TemperatureData.deleteMany({ deviceId })
-
-//     res.json({ message: 'Device deleted successfully' })
-//   } catch (error) {
-//     console.error('Error deleting device:', error)
-//     res.status(500).json({ error: 'Failed to delete device' })
-//   }
-// })
-
-// module.exports = router
-
 // routes/device.js
 const express = require('express')
 const router = express.Router()
 const Device = require('../models/Device')
 const rateLimit = require('express-rate-limit')
+const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
 // Set up rate limiter: maximum of 100 requests per 15 minutes
 const limiter = rateLimit({
@@ -156,7 +17,7 @@ const TemperatureData = require('../models/TemperatureData')
 const Pig = require('../models/Pig')
 
 // Get all devices
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const devices = await Device.find({}).sort({ lastUpdate: -1 })
     
@@ -184,9 +45,14 @@ router.get('/', async (req, res) => {
 })
 
 // Get single device
-router.get('/:id', async (req, res) => {
+router.get('/:id', authenticateJWT, async (req, res) => {
   try {
-    const device = await Device.findOne({ deviceId: parseInt(req.params.id) })
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
+    const device = await Device.findOne({ deviceId })
     if (!device) {
       return res.status(404).json({ error: 'Device not found' })
     }
@@ -198,11 +64,14 @@ router.get('/:id', async (req, res) => {
 })
 
 // Get device temperature history
-router.get('/:id/temperature', async (req, res) => {
+router.get('/:id/temperature', authenticateJWT, async (req, res) => {
   try {
-    const temperatureData = await TemperatureData.find({ 
-      deviceId: parseInt(req.params.id) 
-    })
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
+    const temperatureData = await TemperatureData.find({ deviceId })
       .sort({ timestamp: -1 })
       .limit(100)
 
@@ -214,9 +83,14 @@ router.get('/:id/temperature', async (req, res) => {
 })
 
 // Get associated pig for device
-router.get('/:id/pig', async (req, res) => {
+router.get('/:id/pig', authenticateJWT, async (req, res) => {
   try {
-    const pig = await Pig.findOne({ deviceId: parseInt(req.params.id) })
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
+    const pig = await Pig.findOne({ deviceId })
     res.json({ pigId: pig?.pigId || null })
   } catch (error) {
     console.error('Error fetching associated pig:', error)
@@ -225,7 +99,7 @@ router.get('/:id/pig', async (req, res) => {
 })
 
 // Create new device
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const lastDevice = await Device.findOne().sort({ deviceId: -1 })
     const newDeviceId = (lastDevice?.deviceId || 0) + 1
@@ -248,10 +122,13 @@ router.post('/', async (req, res) => {
 })
 
 // Update device
-router.put('/:id', async (req, res) => {
+router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    const deviceId = parseInt(req.params.id)
-    
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
+
     // Validate req.body values
     const { deviceName, deviceType, status } = req.body;
     if (typeof deviceName !== 'string' || typeof deviceType !== 'string' || typeof status !== 'string') {
@@ -283,9 +160,12 @@ router.put('/:id', async (req, res) => {
 })
 
 // Delete device
-router.delete('/:id', async (req, res) => {
+router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    const deviceId = parseInt(req.params.id)
+    const deviceId = parseInt(req.params.id, 10)
+    if (isNaN(deviceId)) {
+      return res.status(400).json({ error: 'Invalid device ID' })
+    }
     const result = await Device.findOneAndDelete({ deviceId })
     
     if (!result) {
@@ -303,7 +183,7 @@ router.delete('/:id', async (req, res) => {
 })
 
 // ADDITIONAL: Device analytics
-router.get('/analytics/summary', async (req, res) => {
+router.get('/analytics/summary', authenticateJWT, async (req, res) => {
   try {
     const devices = await Device.find({})
     const total = devices.length

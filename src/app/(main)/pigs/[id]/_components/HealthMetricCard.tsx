@@ -35,26 +35,26 @@ export function HealthMetricCard({
   const [error, setError] = useState<string | null>(null)
 
   // Use a ref to track if we've already fetched the data
-  const dataFetchedRef = useRef(false);
+  const dataFetchedRef = useRef(false)
 
   // Get search params
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams()
 
   // Reset the dataFetchedRef when the search params change (date range)
   useEffect(() => {
-    const startParam = searchParams.get("start");
-    const endParam = searchParams.get("end");
+    const startParam = searchParams.get("start")
+    const endParam = searchParams.get("end")
 
     // If the date range changes, reset the dataFetchedRef
     if (startParam || endParam) {
-      dataFetchedRef.current = false;
+      dataFetchedRef.current = false
     }
-  }, [searchParams]);
+  }, [searchParams])
 
   useEffect(() => {
     // Skip fetching if we've already fetched data
     if (dataFetchedRef.current && data) {
-      return;
+      return
     }
 
     const fetchData = async () => {
@@ -67,14 +67,17 @@ export function HealthMetricCard({
           const response = await api.get(endpoint)
 
           // Store the available date range in a global variable if it's the posture endpoint
-          if (endpoint.includes('/posture/') && response.data.dateRange) {
+          if (endpoint.includes("/posture/") && response.data.dateRange) {
             // Also store in global variable for backward compatibility
             window.pigPostureDateRange = response.data.dateRange
-            console.log('Available date range from HealthMetricCard:', response.data.dateRange)
+            console.log(
+              "Available date range from HealthMetricCard:",
+              response.data.dateRange,
+            )
           }
 
           // Mark that we've fetched data
-          dataFetchedRef.current = true;
+          dataFetchedRef.current = true
 
           setData(response.data)
         } catch (error) {
@@ -90,7 +93,7 @@ export function HealthMetricCard({
     }
 
     fetchData()
-  }, [endpoint, title])
+  }, [data, endpoint, title])
 
   if (isLoading) {
     return (
@@ -121,13 +124,21 @@ export function HealthMetricCard({
       <Card>
         <div className="p-6">
           <div className="flex items-center justify-between">
-            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">{title}</h3>
-            <Badge variant={metric.status} className="text-xs">{metric.label}</Badge>
+            <h3 className="text-sm font-medium text-gray-500 dark:text-gray-400">
+              {title}
+            </h3>
+            <Badge variant={metric.status} className="text-xs">
+              {metric.label}
+            </Badge>
           </div>
           <div className="mt-4 flex items-center justify-between">
             <div>
-              <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">{formatValue(metric.value)}</p>
-              <p className="text-sm text-gray-500 dark:text-gray-400">{optimalRange}</p>
+              <p className="text-2xl font-bold text-gray-900 dark:text-gray-50">
+                {formatValue(metric.value)}
+              </p>
+              <p className="text-sm text-gray-500 dark:text-gray-400">
+                {optimalRange}
+              </p>
             </div>
             <div>
               <ProgressCircle
@@ -137,17 +148,23 @@ export function HealthMetricCard({
                 strokeWidth={6}
                 showAnimation
               >
-                <span className="text-sm font-medium">{progressValue.toFixed(0)}%</span>
+                <span className="text-sm font-medium">
+                  {progressValue.toFixed(0)}%
+                </span>
               </ProgressCircle>
             </div>
           </div>
           <div className="mt-4">
             <div className="flex items-center gap-2">
-              <div className={`h-10 w-10 rounded-full bg-${metric.status === "success" ? "green" : metric.status === "warning" ? "amber" : metric.status === "error" ? "red" : "blue"}-100 p-2 dark:bg-${metric.status === "success" ? "green" : metric.status === "warning" ? "amber" : metric.status === "error" ? "red" : "blue"}-900/20`}>
+              <div
+                className={`h-10 w-10 rounded-full bg-${metric.status === "success" ? "green" : metric.status === "warning" ? "amber" : metric.status === "error" ? "red" : "blue"}-100 p-2 dark:bg-${metric.status === "success" ? "green" : metric.status === "warning" ? "amber" : metric.status === "error" ? "red" : "blue"}-900/20`}
+              >
                 {icon}
               </div>
               <div className="space-y-1">
-                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">{metric.trend}</p>
+                <p className="text-sm font-medium text-gray-700 dark:text-gray-300">
+                  {metric.trend}
+                </p>
                 <p className="text-xs text-gray-500">{metric.trendDetail}</p>
               </div>
             </div>
@@ -161,7 +178,9 @@ export function HealthMetricCard({
       <Card>
         <div className="flex h-[200px] flex-col items-center justify-center p-6">
           <p className="text-red-500">Data format error</p>
-          <p className="text-sm text-gray-500 mt-2">Unable to display {title}</p>
+          <p className="mt-2 text-sm text-gray-500">
+            Unable to display {title}
+          </p>
         </div>
       </Card>
     )

@@ -3,6 +3,7 @@ const express = require('express')
 const router = express.Router()
 const TemperatureData = require('../models/TemperatureData')
 const rateLimit = require('express-rate-limit')
+const { authenticateJWT } = require('../middleware/authMiddleware')
 
 // Rate limiter middleware
 const limiter = rateLimit({
@@ -14,7 +15,7 @@ const limiter = rateLimit({
 router.use(limiter)
 
 // GET all temperature records
-router.get('/', async (req, res) => {
+router.get('/', authenticateJWT, async (req, res) => {
   try {
     const records = await TemperatureData.find({}).sort({ timestamp: -1 })
     res.json(records)
@@ -25,7 +26,7 @@ router.get('/', async (req, res) => {
 })
 
 // GET specific record by recordId
-router.get('/:recordId', async (req, res) => {
+router.get('/:recordId', authenticateJWT, async (req, res) => {
   try {
     const record = await TemperatureData.findOne({
       recordId: parseInt(req.params.recordId)
@@ -41,16 +42,23 @@ router.get('/:recordId', async (req, res) => {
 })
 
 // CREATE new temperature record
-router.post('/', async (req, res) => {
+router.post('/', authenticateJWT, async (req, res) => {
   try {
     // Auto-increment logic if needed
     const lastRecord = await TemperatureData.findOne().sort({ recordId: -1 })
     const newRecordId = (lastRecord?.recordId || 0) + 1
 
+    const deviceId = parseInt(req.body.deviceId)
+    const temperature = parseFloat(req.body.temperature)
+
+    if (isNaN(deviceId) || !Number.isFinite(temperature)) {
+      return res.status(400).json({ error: 'Invalid deviceId or temperature' })
+    }
+
     const newRecord = await TemperatureData.create({
       recordId: newRecordId,
-      deviceId: parseInt(req.body.deviceId),
-      temperature: parseFloat(req.body.temperature),
+      deviceId,
+      temperature,
       timestamp: req.body.timestamp || new Date()
     })
 
@@ -62,12 +70,19 @@ router.post('/', async (req, res) => {
 })
 
 // UPDATE temperature record
-router.put('/:recordId', async (req, res) => {
+router.put('/:recordId', authenticateJWT, async (req, res) => {
   try {
     const recordId = parseInt(req.params.recordId)
+    const deviceId = parseInt(req.body.deviceId)
+    const temperature = parseFloat(req.body.temperature)
+
+    if (isNaN(deviceId) || !Number.isFinite(temperature)) {
+      return res.status(400).json({ error: 'Invalid deviceId or temperature' })
+    }
+
     const updates = {
-      deviceId: parseInt(req.body.deviceId),
-      temperature: parseFloat(req.body.temperature),
+      deviceId,
+      temperature,
       timestamp: req.body.timestamp ? new Date(req.body.timestamp) : new Date()
     }
     
@@ -89,7 +104,7 @@ router.put('/:recordId', async (req, res) => {
 })
 
 // DELETE temperature record
-router.delete('/:recordId', async (req, res) => {
+router.delete('/:recordId', authenticateJWT, async (req, res) => {
   try {
     const recordId = parseInt(req.params.recordId)
     const result = await TemperatureData.findOneAndDelete({ recordId })
@@ -104,10 +119,21 @@ router.delete('/:recordId', async (req, res) => {
 })
 
 // ADDITIONAL: Temperature analytics
-router.get('/analytics/summary', async (req, res) => {
+router.get('/analytics/summary', authenticateJWT, async (req, res) => {
   try {
-    const records = await TemperatureData.find({})
-    if (!records || records.length === 0) {
+    const results = await TemperatureData.aggregate([
+      {
+        $group: {
+          _id: null,
+          totalRecords: { $sum: 1 },
+          avgTemperature: { $avg: '$temperature' },
+          minTemperature: { $min: '$temperature' },
+          maxTemperature: { $max: '$temperature' }
+        }
+      }
+    ])
+
+    if (!results || results.length === 0) {
       return res.json({
         totalRecords: 0,
         avgTemperature: 0,
@@ -116,18 +142,12 @@ router.get('/analytics/summary', async (req, res) => {
       })
     }
 
-    const totalRecords = records.length
-    let sumTemp = 0
-    let minTemp = records[0].temperature
-    let maxTemp = records[0].temperature
-
-    records.forEach(r => {
-      sumTemp += r.temperature
-      if (r.temperature < minTemp) minTemp = r.temperature
-      if (r.temperature > maxTemp) maxTemp = r.temperature
-    })
-
-    const avgTemperature = sumTemp / totalRecords
+    const {
+      totalRecords,
+      avgTemperature,
+      minTemperature,
+      maxTemperature
+    } = results[0]
 
     res.json({
       totalRecords,

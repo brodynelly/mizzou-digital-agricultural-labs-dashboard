@@ -49,6 +49,8 @@ services:
       - app-net
     volumes:
       - ./:/usr/server
+      - .env:/env/.env:ro #mounting .env so we can hide login info from script
+
 
   backend:
     image: server:1.0.0
