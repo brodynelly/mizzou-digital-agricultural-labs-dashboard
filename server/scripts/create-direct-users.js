@@ -1,6 +1,6 @@
 require("dotenv").config()
 const { MongoClient, ObjectId } = require("mongodb")
-// Note: Not using bcrypt for seeding to avoid dependency issues
+const bcrypt = require('bcryptjs')
 
 // Connection details
 const DATABASE_HOST = process.env.DATABASE_HOST || "mongo"
@@ -13,7 +13,7 @@ const DATABASE_PASSWORD = process.env.MONGO_INITDB_ROOT_PASSWORD || "PAAL"
 let URI = `mongodb://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@mongo:${DATABASE_PORT}/${DATABASE_DB}?authSource=admin`
 
 // Log non-sensitive connection details
-console.log("Attempting to connect to MongoDB wPAALith the following details:")
+console.log("Attempting to connect to MongoDB with the following details:")
 console.log("DATABASE_HOST:", DATABASE_HOST)
 console.log("DATABASE_PORT:", DATABASE_PORT)
 console.log("DATABASE_DB:", DATABASE_DB)
@@ -48,14 +48,14 @@ async function createDirectUsers() {
     const adminPassword = "admin123"
     const farmerPassword = "farmer123"
 
-    console.log("Using plain text passwords for seeding")
+    console.log("Hashing passwords for secure storage...")
 
-    // Create test users with specific IDs
+    // Create test users with specific IDs and hashed passwords
     const users = [
       {
         _id: new ObjectId("67f1cac0399bf2dda1ea08a8"),
         email: "admin@test.com",
-        password: adminPassword, // Plain text password for seeding
+        password: await bcrypt.hash(adminPassword, 10), // Hashed password for seeding
         firstName: "Admin",
         lastName: "User",
         role: "admin",
@@ -67,7 +67,7 @@ async function createDirectUsers() {
       {
         _id: new ObjectId("67f1cac0399bf2dda1ea08a9"),
         email: "farmer@test.com",
-        password: farmerPassword, // Plain text password for seeding
+        password: await bcrypt.hash(farmerPassword, 10), // Hashed password for seeding
         firstName: "Farmer",
         lastName: "User",
         role: "farmer",

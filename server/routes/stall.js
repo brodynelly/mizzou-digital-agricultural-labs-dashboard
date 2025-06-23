@@ -3,6 +3,7 @@ const router = express.Router()
 const Stall = require('../models/Stall')
 const Barn = require('../models/Barn')
 const Pig = require('../models/Pig')
+const mongoose = require('mongoose')
 const rateLimit = require('express-rate-limit')
 const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware')
 
@@ -13,6 +14,24 @@ const limiter = rateLimit({
 
 // Apply rate limiter to all requests
 router.use(limiter)
+
+// Helper function to validate and extract ObjectId
+const validateObjectId = (id) => {
+  // Handle case where id might be an object with _id property
+  if (typeof id === 'object' && id !== null && id._id) {
+    id = id._id
+  }
+
+  // Convert to string if it's not already
+  id = String(id)
+
+  // Validate ObjectId format
+  if (!mongoose.Types.ObjectId.isValid(id)) {
+    throw new Error(`Invalid ObjectId format: ${id}`)
+  }
+
+  return id
+}
 
 // GET all stalls with barn and farm details
 router.get('/', authenticateJWT, async (req, res) => {
@@ -30,11 +49,11 @@ router.get('/', authenticateJWT, async (req, res) => {
 
     // Add pig counts to each stall
     const stallsWithCounts = await Promise.all(stalls.map(async stall => {
-      const pigCount = await Pig.countDocuments({ 
+      const pigCount = await Pig.countDocuments({
         'currentLocation.stallId': stall._id,
         active: true
       })
-      
+
       return {
         ...stall.toObject(),
         pigCount
@@ -51,7 +70,9 @@ router.get('/', authenticateJWT, async (req, res) => {
 // GET stalls by barn ID
 router.get('/barn/:barnId', authenticateJWT, async (req, res) => {
   try {
-    const stalls = await Stall.find({ barnId: req.params.barnId })
+    const barnId = validateObjectId(req.params.barnId)
+
+    const stalls = await Stall.find({ barnId })
       .populate({
         path: 'barnId',
         select: 'name'
@@ -61,88 +82,92 @@ router.get('/barn/:barnId', authenticateJWT, async (req, res) => {
     res.json(stalls)
   } catch (error) {
     console.error('Error fetching stalls by barn:', error)
+    if (error.message.includes('Invalid ObjectId format')) {
+      return res.status(400).json({ error: error.message })
+    }
     res.status(500).json({ error: 'Failed to fetch stalls' })
   }
 })
+
 router.get('/health', authenticateJWT, async (req, res) => {
   try {
-      const { filter } = req.query;
-      
-      const matchStage = {
-          active: true
-      };
+    const { filter } = req.query;
 
-      // Add optional filtering based on the request
-      if (filter === 'region1') {
-          matchStage['location.region'] = 'Region 1';
-      } else if (filter === 'region2') {
-          matchStage['location.region'] = 'Region 2';
-      }
-      // Add more filters as needed
+    const matchStage = {
+      active: true
+    };
 
-      const stalls = await Stall.aggregate([
-          {
-              $lookup: {
-                  from: 'pigs',
-                  let: { stallId: '$_id' },
-                  pipeline: [
-                      {
-                          $match: {
-                              $expr: {
-                                  $and: [
-                                      { $eq: ['$currentLocation.stallId', '$$stallId'] },
-                                      { $eq: ['$active', true] }
-                                  ]
-                              }
-                          }
-                      }
-                  ],
-                  as: 'pigs'
+    // Add optional filtering based on the request
+    if (filter === 'region1') {
+      matchStage['location.region'] = 'Region 1';
+    } else if (filter === 'region2') {
+      matchStage['location.region'] = 'Region 2';
+    }
+    // Add more filters as needed
+
+    const stalls = await Stall.aggregate([
+      {
+        $lookup: {
+          from: 'pigs',
+          let: { stallId: '$_id' },
+          pipeline: [
+            {
+              $match: {
+                $expr: {
+                  $and: [
+                    { $eq: ['$currentLocation.stallId', '$$stallId'] },
+                    { $eq: ['$active', true] }
+                  ]
+                }
               }
-          },
-          {
-              $match: matchStage
-          },
-          {
-              $project: {
-                  name: 1,
-                  healthy: {
-                      $size: {
-                          $filter: {
-                              input: '$pigs',
-                              as: 'pig',
-                              cond: { $eq: ['$$pig.healthStatus', 'healthy'] }
-                          }
-                      }
-                  },
-                  unhealthy: {
-                      $size: {
-                          $filter: {
-                              input: '$pigs',
-                              as: 'pig',
-                              cond: { $ne: ['$$pig.healthStatus', 'healthy'] }
-                          }
-                      }
-                  },
-                  total: {
-                      $size: '$pigs'
-                  }
+            }
+          ],
+          as: 'pigs'
+        }
+      },
+      {
+        $match: matchStage
+      },
+      {
+        $project: {
+          name: 1,
+          healthy: {
+            $size: {
+              $filter: {
+                input: '$pigs',
+                as: 'pig',
+                cond: { $eq: ['$$pig.healthStatus', 'healthy'] }
               }
+            }
           },
-          { 
-              $sort: { 
-                  // Sort by most unhealthy first to highlight problem areas
-                  unhealthy: -1,
-                  name: 1 
-              } 
+          unhealthy: {
+            $size: {
+              $filter: {
+                input: '$pigs',
+                as: 'pig',
+                cond: { $ne: ['$$pig.healthStatus', 'healthy'] }
+              }
+            }
           },
-          { $limit: 10 } // Limit to top 10 stalls for the chart
-      ]);
+          total: {
+            $size: '$pigs'
+          }
+        }
+      },
+      {
+        $sort: {
+          // Sort by most unhealthy first to highlight problem areas
+          unhealthy: -1,
+          name: 1
+        }
+      },
+      { $limit: 10 } // Limit to top 10 stalls for the chart
+    ]);
 
-      res.json(stalls);
+    res.json(stalls);
   } catch (error) {
-      console.error('Error fetching stall health:', error);
-      res.status(500).json({ message: 'Server error' });
+    console.error('Error fetching stall health:', error);
+    res.status(500).json({ message: 'Server error' });
   }
 });
 
@@ -150,7 +175,9 @@ router.get('/health', authenticateJWT, async (req, res) => {
 // GET single stall with detailed info
 router.get('/:id', authenticateJWT, async (req, res) => {
   try {
-    const stall = await Stall.findById(req.params.id)
+    const stallId = validateObjectId(req.params.id)
+
+    const stall = await Stall.findById(stallId)
       .populate({
         path: 'barnId',
         select: 'name farmId',
@@ -179,6 +206,9 @@ router.get('/:id', authenticateJWT, async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching stall:', error)
+    if (error.message.includes('Invalid ObjectId format')) {
+      return res.status(400).json({ error: error.message })
+    }
     res.status(500).json({ error: 'Failed to fetch stall' })
   }
 })
@@ -192,15 +222,22 @@ router.post('/', authenticateJWT, isAdmin, async (req, res) => {
       return res.status(400).json({ error: 'Name, barnId and farmId are required' })
     }
 
-    const newStall = await Stall.create({ 
+    // Validate ObjectIds
+    const validatedBarnId = validateObjectId(barnId)
+    const validatedFarmId = validateObjectId(farmId)
+
+    const newStall = await Stall.create({
       name,
-      barnId,
-      farmId
+      barnId: validatedBarnId,
+      farmId: validatedFarmId
     })
 
     res.status(201).json(newStall)
   } catch (error) {
     console.error('Error creating stall:', error)
+    if (error.message.includes('Invalid ObjectId format')) {
+      return res.status(400).json({ error: error.message })
+    }
     res.status(500).json({ error: 'Failed to create stall' })
   }
 })
@@ -209,14 +246,19 @@ router.post('/', authenticateJWT, isAdmin, async (req, res) => {
 router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
     const { name, barnId, farmId } = req.body
+    const stallId = validateObjectId(req.params.id)
 
     if (!name || !barnId || !farmId) {
       return res.status(400).json({ error: 'Name, barnId and farmId are required' })
     }
 
+    // Validate ObjectIds
+    const validatedBarnId = validateObjectId(barnId)
+    const validatedFarmId = validateObjectId(farmId)
+
     const updatedStall = await Stall.findByIdAndUpdate(
-      req.params.id,
-      { name, barnId, farmId },
+      stallId,
+      { name, barnId: validatedBarnId, farmId: validatedFarmId },
       { new: true, runValidators: true }
     )
 
@@ -227,6 +269,9 @@ router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
     res.json(updatedStall)
   } catch (error) {
     console.error('Error updating stall:', error)
+    if (error.message.includes('Invalid ObjectId format')) {
+      return res.status(400).json({ error: error.message })
+    }
     res.status(500).json({ error: 'Failed to update stall' })
   }
 })
@@ -234,7 +279,9 @@ router.put('/:id', authenticateJWT, isAdmin, async (req, res) => {
 // DELETE stall with pig reassignment
 router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
   try {
-    const stall = await Stall.findById(req.params.id)
+    const stallId = validateObjectId(req.params.id)
+
+    const stall = await Stall.findById(stallId)
     if (!stall) {
       return res.status(404).json({ error: 'Stall not found' })
     }
@@ -249,6 +296,9 @@ router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
     res.json({ message: 'Stall deleted successfully' })
   } catch (error) {
     console.error('Error deleting stall:', error)
+    if (error.message.includes('Invalid ObjectId format')) {
+      return res.status(400).json({ error: error.message })
+    }
     res.status(500).json({ error: 'Failed to delete stall' })
   }
 })
@@ -256,7 +306,9 @@ router.delete('/:id', authenticateJWT, isAdmin, async (req, res) => {
 // GET stall analytics with pig health data
 router.get('/:id/analytics', authenticateJWT, async (req, res) => {
   try {
-    const stall = await Stall.findById(req.params.id)
+    const stallId = validateObjectId(req.params.id)
+
+    const stall = await Stall.findById(stallId)
       .populate({
         path: 'barnId',
         select: 'name'
@@ -294,6 +346,9 @@ router.get('/:id/analytics', authenticateJWT, async (req, res) => {
     })
   } catch (error) {
     console.error('Error fetching stall analytics:', error)
+    if (error.message.includes('Invalid ObjectId format')) {
+      return res.status(400).json({ error: error.message })
+    }
     res.status(500).json({ error: 'Failed to fetch stall analytics' })
   }
 })

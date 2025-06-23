@@ -276,19 +276,37 @@ export default function UnifiedFarmsPage() {
 
         // Organize data hierarchically
         const processedFarms = farmsData.map(farm => {
-          const farmBarns = barnsData.filter(barn =>
-            (typeof barn.farmId === 'string' && barn.farmId === farm._id) ||
-            (typeof barn.farmId === 'object' && barn.farmId._id === farm._id)
-          );
+          // Skip farms without _id
+          if (!farm || !farm._id) {
+            console.warn('Skipping farm without _id:', farm);
+            return null;
+          }
+
+          const farmBarns = barnsData.filter(barn => {
+            // Skip barns without _id
+            if (!barn || !barn._id) {
+              console.warn('Skipping barn without _id:', barn);
+              return false;
+            }
+
+            return (typeof barn.farmId === 'string' && barn.farmId === farm._id) ||
+              (typeof barn.farmId === 'object' && barn.farmId && barn.farmId._id === farm._id);
+          });
 
           let stallCount = 0;
           let pigCount = 0;
 
           const processedBarns = farmBarns.map(barn => {
-            const barnStalls = stallsData.filter(stall =>
-              (typeof stall.barnId === 'string' && stall.barnId === barn._id) ||
-              (typeof stall.barnId === 'object' && stall.barnId._id === barn._id)
-            );
+            const barnStalls = stallsData.filter(stall => {
+              // Skip stalls without _id
+              if (!stall || !stall._id) {
+                console.warn('Skipping stall without _id:', stall);
+                return false;
+              }
+
+              return (typeof stall.barnId === 'string' && stall.barnId === barn._id) ||
+                (typeof stall.barnId === 'object' && stall.barnId && stall.barnId._id === barn._id);
+            });
 
             const barnPigCount = barnStalls.reduce((sum, stall) => sum + (stall.pigCount || 0), 0);
             pigCount += barnPigCount;
@@ -309,7 +327,7 @@ export default function UnifiedFarmsPage() {
             pigCount,
             barns: processedBarns
           };
-        });
+        }).filter(farm => farm !== null); // Remove null farms
 
         setFarms(processedFarms);
         setBarns(barnsData);
@@ -403,7 +421,7 @@ export default function UnifiedFarmsPage() {
       const processedFarms = farmsData.map(farm => {
         const farmBarns = barnsData.filter(barn =>
           (typeof barn.farmId === 'string' && barn.farmId === farm._id) ||
-          (typeof barn.farmId === 'object' && barn.farmId._id === farm._id)
+          (typeof barn.farmId === 'object' && barn.farmId && barn.farmId._id === farm._id)
         );
 
         let stallCount = 0;
@@ -412,7 +430,7 @@ export default function UnifiedFarmsPage() {
         const processedBarns = farmBarns.map(barn => {
           const barnStalls = stallsData.filter(stall =>
             (typeof stall.barnId === 'string' && stall.barnId === barn._id) ||
-            (typeof stall.barnId === 'object' && stall.barnId._id === barn._id)
+            (typeof stall.barnId === 'object' && stall.barnId && stall.barnId._id === barn._id)
           );
 
           const barnPigCount = barnStalls.reduce((sum, stall) => sum + (stall.pigCount || 0), 0);

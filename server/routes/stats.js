@@ -110,7 +110,7 @@ router.get('/', authenticateJWT, isAdmin, async (req, res) => {
       Farm.countDocuments({}),
       Barn.countDocuments({}),
       Stall.countDocuments({})
-    );
+    ]);
 
     const deviceResult = deviceAgg[0] || {};
     const totalDevices = deviceResult.total || 0;
@@ -207,7 +207,7 @@ router.get('/', authenticateJWT, isAdmin, async (req, res) => {
 
   } catch (error) {
     console.error('Error fetching statistics:', error);
-    res.status(500).json({ 
+    res.status(500).json({
       error: 'Failed to retrieve statistics',
       details: process.env.NODE_ENV === 'development' ? error.message : undefined
     });

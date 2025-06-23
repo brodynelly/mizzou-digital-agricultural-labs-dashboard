@@ -251,7 +251,7 @@ export function TransactionChart({
   // Determine categories based on chart type
   const categories = useMemo(() => {
     if (type === "amount") {
-      return ["1", "2", "3", "4", "5"]
+      return ["1", "2", "3", "4", "5"] // Keep numerical keys for data processing
     } else {
       return ["value"]
     }
@@ -278,7 +278,7 @@ export function TransactionChart({
 
   return (
     <div className={cx(className, "w-full")}>
-      <div className="mb-4 flex items-center justify-between">
+      <div className="flex items-center justify-between">
         <div className="flex gap-2">
           <h2
             id={`${type}-chart-title`}
@@ -297,6 +297,37 @@ export function TransactionChart({
         )}
       </div>
 
+      {/* Posture Legend for amount charts */}
+      {type === "amount" && (
+        <div className="mb-4 mt-2 rounded-md bg-gray-50 p-3 dark:bg-gray-800">
+          <h3 className="mb-2 text-xs font-medium text-gray-700 dark:text-gray-300">
+            Posture Score Legend:
+          </h3>
+          <div className="grid grid-cols-2 gap-2 text-xs text-gray-600 dark:text-gray-400 sm:grid-cols-5">
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-emerald-500"></div>
+              <span>1 - Standing</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-amber-500"></div>
+              <span>2 - Lying</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-blue-500"></div>
+              <span>3 - Sitting</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-violet-500"></div>
+              <span>4 - Moving</span>
+            </div>
+            <div className="flex items-center gap-1">
+              <div className="h-2 w-2 rounded-sm bg-pink-500"></div>
+              <span>5 - Other</span>
+            </div>
+          </div>
+        </div>
+      )}
+
       {isLoading ? (
         <div className="flex h-64 items-center justify-center">
           <div className="h-8 w-8 animate-spin rounded-full border-4 border-primary border-t-transparent"></div>
@@ -310,7 +341,7 @@ export function TransactionChart({
           data={chartData}
           index={type === "amount" ? "date" : "key"}
           categories={categories}
-          showLegend={type === "amount"}
+          showLegend={false}
           colors={colors as AvailableChartColorsKeys[]}
           yAxisWidth={yAxisWidth}
           valueFormatter={config.valueFormatter}
@@ -320,6 +351,8 @@ export function TransactionChart({
           layout={config.layout}
           barCategoryGap="6%"
           aria-labelledby={`${type}-chart-title`}
+          // xAxisLabel={type === "amount" ? "Date" : "Posture Category"}
+          // yAxisLabel={type === "amount" ? (showPercentage ? "Percentage (%)" : "Count") : "Count"}
           customTooltip={(props) => {
             if (!props.active || !props.payload?.length) return null
 
@@ -331,7 +364,7 @@ export function TransactionChart({
                   const categoryLabel =
                     type === "amount"
                       ? (postureCategoryLabels as any)[categoryKey] ||
-                        categoryKey
+                      categoryKey
                       : categoryKey
                   return (
                     <div key={index} className="flex items-center gap-2">
