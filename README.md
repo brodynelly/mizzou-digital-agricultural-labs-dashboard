@@ -1,6 +1,8 @@
 # PAAL Monitoring System
 
-PAAL (Precision Agriculture and Animal Livestock) Monitoring System is a comprehensive web application designed for agricultural operations management. This system provides real-time monitoring, data analytics, and management tools for farms, barns, stalls, and livestock.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT) [![CI](https://github.com/brodynelly/mizzou-digital-agricultural-labs-dashboard/actions/workflows/ci.yml/badge.svg)](https://github.com/brodynelly/mizzou-digital-agricultural-labs-dashboard/actions/workflows/ci.yml) ![TypeScript](https://img.shields.io/badge/TypeScript-5-3178C6?logo=typescript)
+
+PAAL (Precision Agriculture and Animal Livestock) Monitoring System is a full-stack web application designed for agricultural operations management. This system provides real-time monitoring, data analytics, and management tools for farms, barns, stalls, and livestock.
 
 ## Table of Contents
 
@@ -22,13 +24,13 @@ PAAL (Precision Agriculture and Animal Livestock) Monitoring System is a compreh
 
 ## Overview
 
-PAAL Monitoring System is an enterprise-grade application that helps farm owners and managers monitor and manage their agricultural operations efficiently. The system provides a user-friendly interface for tracking livestock health, farm conditions, and operational metrics.
+PAAL Monitoring System is an full-stack application that helps farm owners and managers monitor and manage their agricultural operations efficiently. The system provides a user-friendly interface for tracking livestock health, farm conditions, and operational metrics.
 
 ## Features
 
 - **Real-time Monitoring**: Track all your farm operations with real-time data and analytics
-- **Enterprise Security**: Industry-leading security protocols to protect your data
-- **Advanced Analytics**: Make data-driven decisions with comprehensive analytics
+- **Enterprise Security**: Standard security protocols to protect your data
+- **Advanced Analytics**: Make data-driven decisions with detailed analytics
 - **Role-Based Access Control**: Admin and Farmer user roles with appropriate permissions
 - **Farm Management**: View and edit farm details, barns, stalls, and livestock
 - **System Administration**: Backup & restore, maintenance, and system logs
