@@ -40,3 +40,9 @@ yarn-error.log*
 # typescript
 *.tsbuildinfo
 next-env.d.ts
+
+/server/database/sslkey/
+/server/backups/*.json
+
+!.env.example
+!/server/backups/example-empty-backup.json
