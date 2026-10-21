@@ -12,7 +12,7 @@ services:
       #this will allow for direct connection to database vars via ENV file constraints
       MONGO_INITDB_ROOT_USERNAME: ${MONGO_INITDB_ROOT_USERNAME}
       MONGO_INITDB_ROOT_PASSWORD: ${MONGO_INITDB_ROOT_PASSWORD}
-      MONGO_INITDB_DATABASE: ${DATABASE_COLLECTION}
+      MONGO_INITDB_DATABASE: ${MONGO_INITDB_DATABASE}
     ports:
       - ${DATABASE_PORT}:${DATABASE_PORT}
     networks:
@@ -20,7 +20,7 @@ services:
     command: [ "mongod", "--replSet", "rs0", "--keyFile", "/etc/secrets/security.keyFile" ]
     volumes:
       - database-v:/data/db
-      - ./database/sslkey/security.keyFile:/etc/secrets/security.keyFile:ro
+      - ${MONGO_KEYFILE_PATH:?Set MONGO_KEYFILE_PATH to a locally provisioned Mongo keyfile}:/etc/secrets/security.keyFile:ro
 
   mongo-init:
     image: mongo:latest

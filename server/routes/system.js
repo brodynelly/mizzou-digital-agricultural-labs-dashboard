@@ -8,6 +8,23 @@ const { authenticateJWT, isAdmin } = require('../middleware/authMiddleware');
 const RateLimit = require('express-rate-limit');
 
 // Configure rate limiter: maximum of 100 requests per 15 minutes
+
+function getRequiredDatabaseConfig() {
+  const names = ['DATABASE_HOST', 'DATABASE_PORT', 'MONGO_INITDB_DATABASE', 'MONGO_INITDB_ROOT_USERNAME', 'MONGO_INITDB_ROOT_PASSWORD'];
+  const missing = names.filter((name) => !process.env[name]);
+  if (missing.length > 0) {
+    throw new Error(`Missing required database configuration: ${missing.join(', ')}`);
+  }
+
+  return {
+    host: process.env.DATABASE_HOST,
+    port: process.env.DATABASE_PORT,
+    database: process.env.MONGO_INITDB_DATABASE,
+    username: process.env.MONGO_INITDB_ROOT_USERNAME,
+    password: process.env.MONGO_INITDB_ROOT_PASSWORD,
+  };
+}
+
 const limiter = RateLimit({
   windowMs: 15 * 60 * 1000, // 15 minutes
   max: 100, // max 100 requests per windowMs
@@ -59,11 +76,7 @@ router.get('/metrics', authenticateJWT, isAdmin, async (req, res) => {
       console.log(`System metrics requested by user: ${req.user.email} (${req.user.role})`);
 
       // Get database connection info from environment variables
-      const DATABASE_HOST = process.env.DATABASE_HOST || 'mongo';
-      const DATABASE_PORT = process.env.DATABASE_PORT || '27017';
-      const DATABASE_DB = process.env.MONGO_INITDB_DATABASE || 'paalab';
-      const DATABASE_USERNAME = process.env.MONGO_INITDB_ROOT_USERNAME || 'PAAL';
-      const DATABASE_PASSWORD = process.env.MONGO_INITDB_ROOT_PASSWORD || 'PAAL';
+    const { host: DATABASE_HOST, port: DATABASE_PORT, database: DATABASE_DB, username: DATABASE_USERNAME, password: DATABASE_PASSWORD } = getRequiredDatabaseConfig();
 
       const uri = `mongodb://${DATABASE_USERNAME}:${DATABASE_PASSWORD}@${DATABASE_HOST}:${DATABASE_PORT}/${DATABASE_DB}?authSource=admin`;
 
@@ -136,11 +149,7 @@ router.post('/backup', authenticateJWT, isAdmin, async (req, res) => {
     console.log(`Database backup requested by user: ${req.user.email} (${req.user.role})`);
 
     // Get database connection info from environment variables
-    const DATABASE_HOST = process.env.DATABASE_HOST || 'mongo';
-    const DATABASE_PORT = process.env.DATABASE_PORT || '27017';
-    const DATABASE_DB = process.env.MONGO_INITDB_DATABASE || 'paalab';
-    const DATABASE_USERNAME = process.env.MONGO_INITDB_ROOT_USERNAME || 'PAAL';
-    const DATABASE_PASSWORD = process.env.MONGO_INITDB_ROOT_PASSWORD || 'PAAL';
+    const { host: DATABASE_HOST, port: DATABASE_PORT, database: DATABASE_DB, username: DATABASE_USERNAME, password: DATABASE_PASSWORD } = getRequiredDatabaseConfig();
 
     // Create backup directory if it doesn't exist
     const backupDir = path.join(__dirname, '..', 'backups');
@@ -211,11 +220,7 @@ router.post('/restore', authenticateJWT, isAdmin, async (req, res) => {
     }
 
     // Get database connection info from environment variables
-    const DATABASE_HOST = process.env.DATABASE_HOST || 'mongo';
-    const DATABASE_PORT = process.env.DATABASE_PORT || '27017';
-    const DATABASE_DB = process.env.MONGO_INITDB_DATABASE || 'paalab';
-    const DATABASE_USERNAME = process.env.MONGO_INITDB_ROOT_USERNAME || 'PAAL';
-    const DATABASE_PASSWORD = process.env.MONGO_INITDB_ROOT_PASSWORD || 'PAAL';
+    const { host: DATABASE_HOST, port: DATABASE_PORT, database: DATABASE_DB, username: DATABASE_USERNAME, password: DATABASE_PASSWORD } = getRequiredDatabaseConfig();
 
     // Check if backup file exists
     const backupDir = path.join(__dirname, '..', 'backups');
